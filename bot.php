@@ -2,26 +2,29 @@
 set_time_limit(0);
 ini_set('display_errors', 'on');
 $config = array(
-        'server' => 'ssl://irc.hackthissite.org',
-        'port'   => 7000, // port numbers regular = 6667, ssl = 6697, 7000
-        'channel' => '#ChannelHere', // channel name
-        'name'   => 'NameHere', // name
-        'nick'   => 'NickHere',  // nick
-        'pass'   => 'passwordHere', // password
-	'owner'  => 'AdminFullNick', // Nick + host name here (To get your nick + host name, run $who with the bot in the channel)
+        'server' => '', // server, install ssl, use ssl://irc.hackthissite.org (port 7000)
+        'port'   => , // port numbers regular = 6667, ssl = 6697, 7000
+        'channel' => '', // channel name
+        'name'   => '', // name
+        'nick'   => '',  // nick
+        'pass'   => '', // password
+	'owner'  => '',
 );
+
 
 // Plan on breaking out of the use of these global variables soon
 
-$owner = ""; // same as the owner in $config array
 $user = NULL;
 $fullUser = NULL;
 $message = NULL;
+$filesize = NULL;
+$playertotal = NULL;
 
 class IRCBot {
         var $socket;
         var $ex = array();
         var $state = 0;
+        var $myhealth = array();
 
         function __construct($config) {
            $this->socket = fsockopen($config['server'], $config['port']);
@@ -64,15 +67,236 @@ class IRCBot {
                             $this->state++;
                         }
 
-              //-------------------------------------------------------------------------------------------------------------------
-              //-------------------------------------------------------------------------------------------------------------------
+              //***************************************************************************************************
+              //***************************************************************************************************
+/*if($this->ex[0] == ':flurbbot!flurbbot@HTS-DE1BB303.hsd1.ma.comcast.net') {
+    $this->send_message('Fuck you flurberty');
+}*/
+
+                        /*for($i=1; $i <= (count($this->ex)); $i++) { // youtube video finder
+                            $input .= $this->ex[$i]." ";
+                        }
+                        $input = rtrim($input);
+                        if(preg_match( '#youtube.com/watch?[^\s]*v=([0-9a-zA-Z_\-]*)#i',$input,$matches)) {
+                            $site = "http://www.".$matches[0].$matches[1];
+
+                            //$this->send_message($matches[1]);
+                            $content = file_get_contents($site);
+
+                            $search = '<meta name="twitter:title" content="';
+                            $searchb = '<meta name="twitter:description" content="';
+
+                            $pieces = explode($search, $content);
+                            $piece = explode ('">', $pieces[1]);
+
+                            $piecesb = explode($searchb, $content);
+                            $pieceb = explode('">', $piecesb[1]);
+
+                            $this->send_message("Youtube URL: ".htmlspecialchars_decode($piece[0])."\n");
+                            $this->send_message("Video Description: ".htmlspecialchars_decode($pieceb[0])."\n");
+                        }*/
+
 
               switch($command) { // list of commands the bot will respond to from users
+                 /* case '::':
+                      $text = $this->get_message();
+                      if(preg_match('/http://www.youtube.com/watch?v=/', $text)) {
+                          $this->send_message("Match found!");
+                      }
+                      $this->send_message("Debugging: ".$text);*/
                 /*case ':$test':
-                        // A case for testing out new commands
+                    if($this->is_banned() == true) { // if the user is banned
+                        break;
+                    }
+                    // test code
                       break;*/
 
               //----------------------------------------------------------------------------------------------------------------
+                  case ':$youtube':
+                     $site = $this->ex[4];
+                      $content = file_get_contents($site);
+
+                      $search = '<meta name="twitter:title" content="';
+                      $searchb = '<meta name="twitter:description" content="';
+
+                      $pieces = explode($search, $content);
+                      $piece = explode ('">', $pieces[1]);
+
+                     $piecesb = explode($searchb, $content);
+                     $pieceb = explode('">', $content);
+
+                      $this->send_message("Youtube URL: ".htmlspecialchars_decode($piece[0])."Description: ".htmlspecialchars_decode($pieceb[0])."\n");
+                      break;
+
+                  case ':$addplayer':
+                      $this->con_mysql();
+                      $health = 100; // health
+                      $healthTotal = 100;
+                      $speed = 100; //speed
+                      $attack = 100; // attack
+                      $defense = 100;// defense
+                      $name = $this->ex[4]; //name
+                      $level = 1; // level
+                      $class = $this->ex[5]; //level
+                      mysql_query("INSERT INTO players (health, healthTotal, speed, attack, defense, name, level, class) VALUES ('".$health."', '".$healthtotal."', ".$speed."', '".$attack."', '".$defense."', '".$name."', '".$level."', '".$class."')");
+                      $this->send_message("Query sent, check to make sure it worked...");
+                      break;
+
+
+               //----------------------------------------------------------------------------------------------------------------
+
+                  case ':$register':
+                      $this->who_is();
+                      $this->con_mysql();
+                      $user = rtrim($GLOBALS['user']);
+                      $pass = $this->ex[4];
+                      $salt = "0osdf87ijflkj";
+                      $pass = $salt.$pass;
+                      $pass = md5(rtrim($pass));
+                      mysql_query("INSERT INTO ninja_login (login_name, login_pass) VALUES ('".$user."', '".$pass."')");
+                      $this->send_message("You have successfully registered an account!");
+                      break;
+
+               //----------------------------------------------------------------------------------------------------------------
+
+                  case ':$account': // change to $account with the switch case of login, logout, status
+                      $choice = $this->ex[4];
+                      $this->con_mysql();
+                      $this->who_is();
+                      $user = $GLOBALS['user'];
+                      switch($choice) {
+                          case 'info':
+                              if($this->check_login() != true) {
+                                  $this->send_message("You must first be logged in to get the account details!");
+                              }
+                              else {
+                                  $getinfo = mysql_query("SELECT * FROM players WHERE name='".$user."'");
+                                  $getinventory = mysql_query("SELECT * FROM inventory WHERE name='".$user."'");
+                                  while($info = mysql_fetch_array($getinfo)) {
+                                      $health = $info['health'];
+                                      $speed = $info['speed'];
+                                      $attack = $info['attack'];
+                                      $defense = $info['defense'];
+                                      $name = $info['name'];
+                                      $level = $info['level'];
+                                      $class = $info['class'];
+                                      $exp = $info['exp'];
+                                      $healthtotal = $info['healthTotal'];
+                                      $this->send_message("General Stats >> Health: ".$health." Max Health: ".$healthtotal.", Speed: ".$speed.", Attack: ".$attack.", Defense: ".$defense.", Name: ".$name.", Level: ".$level.", Class: ".$class.", Exp: ".$exp);
+                              }
+                                  while($inventory = mysql_fetch_array($getinventory)) {
+                                      $weapon = $inventory['weapon'];
+                                      $healthpots = $inventory['healthpot'];
+                                      $poisonpots = $inventory['poisonpot'];
+                                      $gold = $inventory['gold'];
+                                      $armor = $inventory['armor'];
+                                      $helmet = $inventory['helmet'];
+                                      $leggings = $inventory['leggings'];
+                                      $this->send_message("Equiped With >> Weapon: ".$weapon.", Armor: ".$armor.", Helmet: ".$helmet.", Leggings: ".$leggings.", Gold: ".$gold.", Health Potions: ".$healthpots.", Poison Potions: ".$poisonpots);
+                                  }
+                              }
+                                  break;
+                          case 'status':
+                              if($this->check_login() == true) {
+                                  $this->send_message("You are currently logged in!");
+                              }
+                              else {
+                                  $this->send_message("You are not logged into an account!");
+                              }
+                              break;
+                          case'login':
+                              $pass = $this->ex[5]; // if the user placed a password here
+                              //$this->check_login($pass);
+                              $salt = "0osdf87ijflkj";
+                              $pass = rtrim(md5($salt.$pass));
+                              $value = "True";
+                              $getpass = mysql_query("SELECT login_pass FROM ninja_login WHERE login_name='".$user."'");
+                              while($row = mysql_fetch_array($getpass)) {
+                                  if($row['login_pass'] == $pass) {
+                                      mysql_query("UPDATE ninja_login SET logged_in='".$value."' WHERE login_name='".$user."'"); // Query to set logged_in to "True"
+                                      $this->send_message("You have successfully logged in!");
+                                      break;
+                                  }
+                                  else{
+                                      $this->send_message("ERROR: The password did not match for your username!");
+                                      break;
+                                  }
+                              }
+                              break;
+                          case 'logout':
+                              if($this->check_login() == false) {
+                              $this->send_message("You can not log out of an account you are not logged into!");
+                              break;
+                          }
+                              $query = mysql_query("SELECT logged_in FROM ninja_login WHERE login_name='".$user."'");
+                              $false = "False";
+                              while($row = mysql_fetch_array($query)) {
+                                  if($row['logged_in'] == "True") {
+                                      mysql_query("UPDATE ninja_login SET logged_in='".$false."'");
+                                      $this->send_message("You have successfully logged out!");
+                                      break;
+                                  }
+                              }
+                      }
+                    break;
+
+               //----------------------------------------------------------------------------------------------------------------
+
+                  case ':$getplayer':
+                      $this->con_mysql();
+                      $user = $this->ex[4];
+                      $query = mysql_query("SELECT * FROM players WHERE name='".$user."'");
+                      while($row = mysql_fetch_array($query)) {
+                          $this->send_message("The user is: ".$row['name']." and has ".$row['health']." health!");
+                         /* foreach($row as $message) {
+                              $this->send_message($message);
+                          }*/
+                      }
+                      break;
+              //-----------------------------------------------------------------------------------------------------------------
+
+                  case ':$ninja':
+                      $this->con_mysql();
+                      if($this->is_banned() == true) {
+                          break;
+                      }
+                     // if($this->is_admin() != true) {
+                       //   $this->send_message("Protecting this function from the l337 kids around the block!");
+                    //  }
+                      if($this->is_admin() xor $this->is_mod() != true) {
+                          $this->send_message("You are not authorized to use this command, sorry!");
+                          break;
+                      }
+                      switch($this->ex[4]) {
+                          case 'start':
+
+                              break;
+
+                          case 'attack':
+                              $this->con_mysql(); // connecting to ninja db
+                              $user = $this->ex[5]; // grabbing the user to attack
+                              if($this->check_login() == "True") { // see if user is logged in
+                                $this->attack_user($user); // send attack request
+                                $chance = rand(1,2); // 50% chance to get loot
+                                if($chance == 1) {
+                                    $random = rand(1,6); // random is to be used to select a sword via the sword_id
+                                    $query = mysql_query("SELECT type FROM swords WHERE sword_id='".$random."'");
+                                    $this->send_message("You found a ".$query);
+                                    /*while($row = mysql_fetch_array($query)) {
+                                        $que = "SELECT "
+                                        $this->send_message("You have found a ".$row["$random"]);
+                                    }*/
+                                }
+                                  else {
+                                      $this->send_message("No loot was found!");
+                                  }
+                              }
+                              else {
+                                  $this->send_message("You must be logged in to attack another player!");
+                              }
+                              break;
+                      }
+                      break;
                     /*
                                         $nick
                             Will change the nickname of the bot
@@ -89,13 +313,16 @@ class IRCBot {
 				        $this->send_data('NICK', $nick); // change the nick
 				    }
 				    else { // if the user is not the admin
-				        $this->send_message("Only the admin and mods can use this command!");
+				        $this->send_message("Only Ninjex and mods can use this command!");
 				    }
 				    break;
 
              //------------------------------------------------------------------------------------------------------------------
 
                   case ':$lulz':
+                      if($this->is_banned() == true) { // if the user is banned
+                          break;
+                      }
                       $namefile = @fopen("game/names.txt", "r");
                       $nametitle = @fopen("game/nametitle.txt", "r");
                       $verbsfile = @fopen("game/verbs.txt", "r");
@@ -114,6 +341,25 @@ class IRCBot {
                       shuffle($verbs);
                       $this->send_message($names[0]." ".$titles[0]." ".$verbs[0]." ".$names[1]." ".$titles[1]."\n");
                       break;
+
+             //------------------------------------------------------------------------------------------------------------------
+                    case ':$joke':
+                        if($this->is_banned() == true) { // if the user is banned
+                            break;
+                        }
+                        $input = NULL;
+                        for($i=4; $i <= (count($this->ex)); $i++) { // grabbing the message
+                            $input .= $this->ex[$i]." "; // storing the message in input
+                        }
+                        $input = trim($input);
+                        $insultfile = @fopen("insults.txt", "r");
+                        $rand = rand(0,47);
+                        if($insultfile) {
+                            $insult = explode("\n", rtrim(fread($insultfile, filesize("insults.txt"))));
+                        }
+                        shuffle($insult);
+                        $this->send_message($input.", ".$insult[$rand]);
+                        break;
 
             //-------------------------------------------------------------------------------------------------------------------
 
@@ -146,7 +392,7 @@ class IRCBot {
                         break;
                     }
                     if($this->is_admin() != true) { // if the user is not the admin
-                        $this->send_message('Only the admin may use the $ban command!');
+                        $this->send_message('Only Ninjex may use the $ban command!');
                         break;
                     }
                     else{ // if the user is not banned
@@ -171,7 +417,7 @@ class IRCBot {
                     }
                     $user = $this->ex[4]; // grabbing the user from input
                     if($this->is_admin() != true) { // if the user is not the admin
-                        $this->send_message('Only the admin may use the $mod command!');
+                        $this->send_message('Only Ninjex may use the $mod command!');
                         break;
                     }
                     elseif($this->check_mod($user) == true) { // if the user is already a mod
@@ -180,7 +426,7 @@ class IRCBot {
                     }
                     else { // if the user is not a mod
                         $person = $this->ex[4]; // getting the user from the command
-			$this->make_mod(); // using make_mod() function to mod the user
+				        $this->make_mod(); // using make_mod() function to mod the user
                         $this->send_message("Successfully added the user to the mod list!");
                     }
                     break;
@@ -200,7 +446,7 @@ class IRCBot {
                         break;
                     }
                     if($this->is_admin() != true) { // if the user is not the admin
-                        $this->send_message("Only the admin may use the $rmod command!");
+                        $this->send_message("Only Ninjex may use this command!");
                     }
                     else {
                         $person = $this->ex[4]; // grabbing the specified user
@@ -270,7 +516,7 @@ class IRCBot {
                         $this->join_channel($this->ex[4]);
 				    }
                     else { // if the user is not the admin
-                        $this->send_message('Sorry, only the admin can use the $join command!');
+                        $this->send_message('Sorry, only Ninjex can use the $join command!');
                     }
                 break;
 
@@ -289,7 +535,7 @@ class IRCBot {
                         break;
                     }
                     if($this->is_admin() != true) { // if the user is not the admin
-                        $this->send_message('Sorry, only the admin can use the $gtfo command!');
+                        $this->send_message('Sorry, only Ninjex can use the $gtfo command!');
                     }
 				    else { // if the user is the admin
                         $this->send_data('QUIT', 'Yolo');
@@ -342,14 +588,14 @@ class IRCBot {
                    if($this->is_banned() == true) { // if the user is banned
                        break;
                    }
-		   $salt = $this->ex[4]; // grabbing the salt
-		   for($i=5; $i <= (count($this->ex)); $i++) { // grabbing the string to hash
-                   	$string .= $this->ex[$i]." "; // still grabbing the string
+				   $salt = $this->ex[4]; // grabbing the salt
+				   for($i=5; $i <= (count($this->ex)); $i++) { // grabbing the string to hash
+                       $string .= $this->ex[$i]." "; // still grabbing the string
                    }
                    $string = rtrim($string); // removing trailing whitespace from the string
-		   $crypt = crypt($string,$salt); // using crypt function to encrypt our string with the given salt
-	    	   $this->send_message('The encrypted unix value of: ' . $string . ' with salt: ' . substr($salt,0,2) . ' is: ' . $crypt);
-		   break;
+			       $crypt = crypt($string,$salt); // using crypt function to encrypt our string with the given salt
+	    		   $this->send_message('The encrypted unix value of: ' . $string . ' with salt: ' . substr($salt,0,2) . ' is: ' . $crypt);
+				   break;
 
             //-----------------------------------------------------------------------------------------------------------------------
 
@@ -445,6 +691,10 @@ class IRCBot {
                   else { // if the user is a mod or admin
                   $md5file = fopen("md5hashes.txt", "a+"); // opening the md5hash file
                   for($i=4; $i <= (count($this->ex)); $i++) { // grabbing the string to hash into md5
+                      if($i == 14) {
+                          $this->send_message("You can only insert 10 words to be hashed and inserted into the file, only 10 hashes entered!");
+                          break;
+                      }
                       $word = rtrim($this->ex[$i]); // removing trailing whitespace from the word
                       $hash = md5($word); // hashing the word into md5
                       fwrite($md5file, $hash."\n");
@@ -464,7 +714,7 @@ class IRCBot {
                                 Echo the value for each hash if found otherwise echo nohting
                    */
 
-              case ':$dmd5file':
+              case ':$md5file':
                   if($this->is_banned() == true) { // if the user is banned
                       break;
                   }
@@ -472,19 +722,20 @@ class IRCBot {
                       $this->send_message("You are not authorized to use this command.");
                   }
                   else { // if the user is a mod or admin
+                  $this->send_message("Checking the lookup table for the hash, please check your pm feed for the discovered hashes!");
                   $md5file = fopen("md5hashes.txt", "a+");  // opening the md5hash file - the hashes that need to be found
                   $option = rtrim($this->ex[4]); // setting an option to use either small or big for the dictionary
                   while(!feof($md5file)) { // while not at the end of the md5hash file
                       $hashinmd5file = rtrim(fgets($md5file)); // get the hash on the current line of the file
                       if(strlen($hashinmd5file) >=1 ) { // if the hash is greater than or equal to 1 in length
-                          $starttime = time();
+                          //$starttime = time();
                         $this->decrypt_md5($hashinmd5file, $option); // call the hash to our decrypt_md5 function
-                          $endtime = time();
-                          $time = $endtime-$starttime;
-                          $this->send_message("Time elapsed in second(s): ".$time);
+                          //$endtime = time();
+                         // $time = $endtime-$starttime;
+                          //$this->send_message("Time elapsed in second(s): ".$time);
                       }
                   }
-                  $this->send_message("Done looking up hashes... If a word was not displayed, it was not found...");
+                  $this->send_message("Done looking up hashes... Remember to check your pm feed for the discovered hash values");
                   }
                   break;
             //-----------------------------------------------------------------------------------------------------------------------
@@ -526,6 +777,10 @@ class IRCBot {
                        $md5file = fopen("md5hashes.txt", "a+"); // opening our md5hash file
                        for($i=4; $i <= (count($this->ex)); $i++) { // grabbing our string
                            $word = rtrim($this->ex[$i]); // removing whitespace from string
+                           if($i == 14) {
+                               $this->send_message("You can only insert 10 hashes at a time, only 10 hashes entered!");
+                               break;
+                           }
                            fwrite($md5file, $word."\n"); // writing the word to our file
                        }
                    $this->send_message("Done writing hashes to file...");
@@ -544,16 +799,15 @@ class IRCBot {
                             remove the tempt.txt file using a exec command
                    */
 
-                case ':$bmd5':
+                case ':$md5':
                     if($this->is_banned() == true) { // if the user is banned
                         break;
                     }
                     $hash = trim($this->ex[4]); // grabbing the hash
                     $this->send_message("Searching the lookup table for: ".$hash); // let them know we are about to do the lookup
                     $file = fopen("tempt.txt", "a+"); // opening temp file for found hashes
-                    $starttime = time(); // start time count
-                    $start = substr($hash, 0, 1); // grabbing first character of the hash
-                    $md5_file = "bigdic/".$start.".txt"; // the file is the first character of the hash .txt (i.e, a.txt)
+                    $start = substr($hash, 0, 3); // grabbing first character of the hash
+                    $md5_file = "dic/".$start.".txt"; // the file is the first character of the hash .txt (i.e, a.txt)
                     exec("grep -m1 '$hash' $md5_file >> tempt.txt"); // getting values from the file and storing them into tempt
                     $count = 0; // setting our count initializer
                     while(!feof($file)) { // while not at the end of our tempt file
@@ -568,50 +822,6 @@ class IRCBot {
                         $this->send_message("Done looking up hashes... If a word was not displayed, it was not found...");
                     }
                     exec("rm tempt.txt"); // remove the tempt file
-                    $endtime = time(); // end our time count
-                    $message = $endtime-$starttime; // do some math to get the amount of time it took
-                    $this->send_message($message." second(s) have elapsed...");
-                break;
-
-            //-----------------------------------------------------------------------------------------------------------------------
-
-                  /*
-                                                $sdmd5
-                         Check a lookup table for the given md5 hash value and echo's the value
-                             grab the hash to lookup with ex[4]
-                             use grep to search the file for the hash value
-                             return the value of grep into tempt.txt
-                             echo the values of tempt.txt into IRC if the length is >= 1
-                             remove the tempt.txt file using a exec command
-                  */
-
-                  case ':$smd5':
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $hash = trim($this->ex[4]); // storing the hash
-                      $this->send_message("Searching the lookup table for: ".$hash); // let them know we are searching the table
-                      $file = fopen("tempt.txt", "a+"); // opening temp file for found hashes
-                      $starttime = time(); // start time count
-                      $start = substr($hash, 0, 1); // grabbing first character of the hash
-                      $md5_file = "smalldic/".$start.".txt"; // the file is the first character of the hash .txt (i.e, a.txt)
-                      exec("grep -m1 '$hash' $md5_file >> tempt.txt"); // using grep to find the value of the hash and storing it in tempt
-                      $count = 0; // setting a line counter for the tempt file
-                      while(!feof($file)) { // while not at the end of file
-                          $word = fgets($file); // the word is the value of the current line in tempt
-                          $word = substr($word, 33); // getting the first character of the hash
-                          if(strlen($word) >= 1) { // if the word is not null
-                              $this->send_message("The value of the hash is: ".$word."\n"); // send the value of the hash
-                          }
-                          $count++; // add 1 to count
-                      }
-                      if($count <= 1) { // if the count value is 1 or less
-                        $this->send_message("Done looking up hashes... If a word was not displayed, it was not found..."); // The value is not in the dictionary
-                      }
-                    exec("rm tempt.txt"); // remove the tempt file
-                    $endtime = time(); // ending our timer
-                    $message = $endtime-$starttime; // doing math to get the total time elapsed
-                    $this->send_message($message." second(s) have elapsed..."); // echo the time it took
                 break;
 
             //-----------------------------------------------------------------------------------------------------------------------
@@ -642,12 +852,12 @@ class IRCBot {
 				    else {
 				        $word = rtrim($word);
                         if(substr($word, -1) != "$") {
-                            exec("grep -E ^.................................'$word'$ dictionary.txt >> tempt.txt"); // if last letter != $
+                            exec("grep -E ^.................................'$word'$ newrockyou.txt >> tempt.txt"); // if last letter != $
                         }
                         if(substr($word, -1) == "$") {
-                            exec("grep ^.................................'$word'$ dictionary.txt >> tempt.txt"); // if the last letter is $
+                            exec("grep ^.................................'$word'$ newrockyou.txt >> tempt.txt"); // last letter is $
                         }
-                        $filename = fopen("tempt.txt", "a+");
+                        $filename = fopen("/home/ninjex/bot/tempt.txt", "a+");
                         $count = 0;
                         while(!feof($filename)) {
                             $line = rtrim(fgets($filename));
@@ -655,7 +865,7 @@ class IRCBot {
                         }
                         if($count <= 1) {
                             $hash = md5($word);
-                            $dictionary = fopen("dictionary.dic", "a+");
+                            $dictionary = fopen("/home/ninjex/bot/newrockyou.txt", "a+");
                             fwrite($dictionary, "$hash:$word\n");
                             fclose($dictionary);
                             $this->send_message("Successfully added the word to the dictionary!");
@@ -685,8 +895,9 @@ class IRCBot {
                       break;
                   }
                   $input = rtrim($this->get_message()); // grabbing the user input
+                  $input = preg_replace('/[^0-9+*%.\/-]/', '', $input);
                   $sum = $this->do_math($input); // store the return of our input passed through the do_math function into $sum
-                  $this->send_message("The value is: ".$sum); // echo the value
+                  $this->send_message("The value is: ".$sum); // echo the value*/
 				  break;
 
             //-----------------------------------------------------------------------------------------------------------------------
@@ -733,25 +944,12 @@ class IRCBot {
 //---------------------------------------.....______________________.....------------------------------------------------\\
 //--------------------------------------------**********************-----------------------------------------------------\\
 
-        function decrypt_md5($hash, $option) {
+
+        function decrypt_md5($hash) {
             $hash = rtrim($hash); // remove whitespace from the word to lookup
-            $start = substr($hash, 0, 1); // grabbing first character of the hash
-            $bmd5_file = "bigdic/".$start.".txt"; // the file is the first character of the hash in bigdic
-            $smd5_file = "smalldic/".$start.".txt"; // the file is the first character of the hash in smalldic
-            if($option == "big") {
-                $this->send_message("Checking bigdic...");
-                exec("grep -m1 '$hash' $bmd5_file >> tempt.txt"); // grep the word and store it in tempt.txt
-            }
-            elseif($option == "small") {
-                $this->send_message("Checking smalldic...");
-                exec("grep -m1 '$hash' $smd5_file >> tempt.txt"); // grep the word and store it in tempt.txt
-            }
-            else {
-                $this->send_message("Checking bigdic...");
-                exec("grep -m1 '$hash' $bmd5_file >> tempt.txt"); // grep the word and store it in tempt.txt
-                $this->send_message("Checking smalldic...");
-                exec("grep -m1 '$hash' $smd5_file >> tempt.txt"); // grep the word and store it in tempt.txt
-            }
+            $start = substr($hash, 0, 3); // grabbing first character of the hash
+            $md5_file = "dic/".$start.".txt"; // the file is the first character of the hash in bigdic
+                exec("grep -m1 '$hash' $md5_file >> tempt.txt"); // grep the word and store it in tempt.txt
             $file = fopen("/home/ninjex/bot/tempt.txt", "a+"); // opening tempt.txt
             while(!feof($file)) { // while not at the end of tempt.txt
                 $word = fgets($file); // grab the word shold be similar to (hash:value)
@@ -760,7 +958,9 @@ class IRCBot {
                     break;
                 }
                 if(strlen($word) >= 1) { // if the word is not null such as a carriage return
-                    $this->send_message("The value for hash: ".$hash." is: ".$word."\n");
+                    $this->who_is();
+                    $person = $GLOBALS['user'];
+                    $this->send_data('NOTICE '.$person." :The value for hash: ".$hash." is: ".$word."\n");
                 }
             }
             exec("rm tempt.txt");
@@ -768,8 +968,125 @@ class IRCBot {
 
 //-------------------------------------------------------------------------------------------------------------------
 
-       /* function template() {
-            //
+        function attack_user($user) {
+            // invalid accounts retaliate
+            // loot still gets searched on invalid account attacks
+
+            $checkifuserexists = mysql_query("SELECT name FROM players WHERE name='".$user."'");
+            $row = mysql_fetch_array($checkifuserexists);
+            if($row['name'] != $user) {
+                $this->send_message("The user you are trying to attack is an invalid account!");
+                break; // may help stop invalid account from retliation
+            }
+            $this->who_is();
+            $attacker = $GLOBALS['user'];
+            $user = mysql_real_escape_string($user);
+            $damage = rand(1,10);
+            $this->con_mysql();
+            $query = mysql_query("SELECT health FROM players WHERE name='".$user."'"); // Grab the victims health
+            $que = mysql_query("SELECT health FROM players WHERE name='".$attacker."'"); // Grab the attackers health
+            $damageb = rand(1,10);
+
+            while($row = mysql_fetch_array($query)) {
+                $oldHealth = $row['health']; // Storing their current health in $oldHealth
+                if($row['health'] <= 0) { // Seeing if the user is already dead
+                    $this->send_message("What is wrong with you? You are trying to attack the dead!"); // error if dead
+                }
+                else { // if not dead
+                    $newHealth = $oldHealth-$damage; // subtract the damage from their health
+                    if($newHealth <= 0) { // if the user's new health is <= 0
+                        $this->send_message($attacker." has killed ".$user." congratulations, you gained a level and exp point!"); // killed the user and leveled up
+                        $getexp = mysql_query("SELECT exp FROM players WHERE name='".$attacker."'"); // query to grab current exp points
+                        $getlevel = mysql_query("SELECT level FROM players WHERE name='".$attacker."'"); // query to grab current level
+                        while($updatelevel = mysql_fetch_array($getlevel)) { // running through the rows as $updatelevel
+                            $level = $updatelevel['level']+1; // updating the level
+                        }
+                        while($row = mysql_fetch_array($getexp)) { // running through the rows as $getexp
+                            $exp = $row['exp']+1; // updating the exp
+                        }
+                        mysql_query("UPDATE players SET exp='".$exp."' WHERE name='".$attacker."'"); // updating the exp
+                        mysql_query("UPDATE players SET level='".$level."' WHERE name='".$attacker."'"); // updating the level
+                        $newHealth = 0; // setting health to zero, in case it's below
+                    }
+                    mysql_query("UPDATE players SET health='".$newHealth."' WHERE name='".$user."'"); // updating the health
+                    $this->send_message($user." was attacked for ".$damage." damage!"); // show the damage
+                    $this->send_data('PRIVMSG '.$user . ' :You have been attacked for '.$damage." damage and have ".$this->get_health($user)." health remaining!"); // tell the user
+                }
+            }
+
+            while($row = mysql_fetch_array($que)) {
+                $oldHealth = $row['health']; // Storing their current health in $oldHealth
+                if($row['health'] <= 0) { // Seeing if the user is already dead
+                    $this->send_message("What is wrong with you? You are trying to attack the dead!"); // error if dead
+                }
+                else { // if not dead
+                    $newHealth = $oldHealth-$damageb; // subtract the damage from their health
+                    if($newHealth <= 0) { // if the user's new health is <= 0
+                        $this->send_message($user." has killed ".$attacker." congratulations, you gained a level and exp point!"); // killed the user and leveled up
+                        $getexp = mysql_query("SELECT exp FROM players WHERE name='".$user."'"); // query to grab current exp points
+                        $getlevel = mysql_query("SELECT level FROM players WHERE name='".$user."'"); // query to grab current level
+                        while($updatelevel = mysql_fetch_array($getlevel)) { // running through the rows as $updatelevel
+                            $level = $updatelevel['level']+1; // updating the level
+                        }
+                        while($row = mysql_fetch_array($getexp)) { // running through the rows as $getexp
+                            $exp = $row['exp']+1; // updating the exp
+                        }
+                        mysql_query("UPDATE players SET exp='".$exp."' WHERE name='".$user."'"); // updating the exp
+                        mysql_query("UPDATE players SET level='".$level."' WHERE name='".$user."'"); // updating the level
+                        $newHealth = 0; // setting health to zero, in case it's below
+                    }
+                    mysql_query("UPDATE players SET health='".$newHealth."' WHERE name='".$attacker."'"); // updating the health
+                    $this->send_message($user." has retaliated for ".$damageb." damage!"); // show the damage
+                    $this->send_data('PRIVMSG '.$attacker . ' :'.$user.' has retaliated for '.$damageb." damage! You have ".$this->get_health($attacker)." health remaining!"); // tell the user
+                }
+            }
+
+        }
+
+//-------------------------------------------------------------------------------------------------------------------
+
+
+        function check_login() {
+
+            $this->who_is();
+            $user = $GLOBALS['user'];
+            $query = mysql_query("SELECT logged_in FROM ninja_login WHERE login_name='".$user."'"); // see if user is logged in or not
+            while($row = mysql_fetch_array($query)) {
+                if($row['logged_in'] == "True") {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+
+//-------------------------------------------------------------------------------------------------------------------
+
+        function get_health($user) {
+            $this->con_mysql();
+            $query = mysql_query("SELECT health FROM players WHERE name='".$user."'");
+            while($row = mysql_fetch_array($query)) {
+                if($row['health'] <= 0) {
+                    $this->send_message($user." has been killed!");
+                    return "dead";
+                }
+                else {
+                    return $row['health'];
+                }
+            }
+        }
+
+//-------------------------------------------------------------------------------------------------------------------
+        function con_mysql() {
+            mysql_connect('server usually localhost', 'username maybe root?', 'password to username') or die(mysql_error());
+            mysql_select_db("ninja") or die(mysql_error);
+
+        }
+//-------------------------------------------------------------------------------------------------------------------
+
+         /* function template() {
+         //
         }*/
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -808,9 +1125,9 @@ class IRCBot {
             }
             $message_two = trim(substr($message_two, 1)); // removing the colon from message_two
 
-            if($chan == "NickHere") { // if the channel the message is being sent to is the bot
+            if($chan == "NinjX") { // if the channel the message is being sent to is the bot
                $this->who_is(); // get the details of the current user
-               $this->send_data('PRIVMSG AdminNick :Private Message detected from: ' . $GLOBALS['fullUser'] . " the message is: " . $message_two); // let admin know someone is in pm with the bot (Replace AdminNick with your Nick)
+               $this->send_data('PRIVMSG Ninjex :Private Message detected from: ' . $GLOBALS['fullUser'] . " the message is: " . $message_two); // let admin know someone is in pm with the bot
                exec("echo Private message detected from: $GLOBALS[fullUser] the message is: '$message_two' >> bot.log"); // log the pm in bot.log
                return $this->send_data('PRIVMSG '. $GLOBALS['user'] . ' :> ' . $x); // return the message to the user's name instead of the bot's name
             }
@@ -819,7 +1136,8 @@ class IRCBot {
                 return $this->send_data('PRIVMSG ' . $chan . ' :> p0niez are evil, and so are you!');
             }
             else { // if the message does not contain pony
-                $this->send_data("PRIVMSG AdminNick :> Command initiated by: " . $GLOBALS['fullUser'] . " the command is: " . $message_two); // let the admin know someone is commanding the bot
+                $this->who_is();
+               // $this->send_data("PRIVMSG Ninjex :> Command initiated by: " . $GLOBALS['fullUser'] . " the command is: " . $message_two); // let the admin know someone is commanding the bot
                 exec("echo Command initiated by: $GLOBALS[fullUser] the command is: '$message_two' >> bot.log"); // log the command in bot.log
                 return $this->send_data('PRIVMSG ' . $chan . ' :> ' . $x); // return the message to the channel
             }
@@ -916,7 +1234,7 @@ class IRCBot {
         }
         if(trim($splitperson[1]) == $baneduser) { // if a host in the baned file belongs to the host of the user
             $this->send_message("Sorry, I don't listen to idiots.");
-            $this->send_data('PRIVMSG AdminNick :A banned user [' . $GLOBALS['user'] . '] aka [' . $GLOBALS['fullUser'] . '] attempted to use the bot!'); // tell the admin a baned user attempted to use the bot
+            $this->send_data('PRIVMSG Ninjex :A banned user [' . $GLOBALS['user'] . '] aka [' . $GLOBALS['fullUser'] . '] attempted to use the bot!'); // tell the admin a baned user attempted to use the bot
             exec("echo A banned user [$GLOBALS[user]] aka [$GLOBALS[fullUser]] attempted to use the bot! >> bot.log"); // log the attempt of using the bot in bot.log
             return true;
             }
@@ -929,7 +1247,7 @@ class IRCBot {
         if($this->is_banned() == true) { // if the user being banned = true
             $this->who_is(); // grab the details of the user
             $this->send_message("Sorry, I don't listen to idiots."); // give error
-            $this->send_data('PRIVMSG AdminNick :A banned user [' . $GLOBALS['user'] . '] aka [' . $GLOBALS['fullUser'] . '] attempted to use the bot'); // let the admin know a baned user attempted to use the bot
+            $this->send_data('PRIVMSG Ninjex :A banned user [' . $GLOBALS['user'] . '] aka [' . $GLOBALS['fullUser'] . '] attempted to use the bot'); // let the admin know a baned user attempted to use the bot
             return true;
         }
     }
@@ -963,24 +1281,24 @@ class IRCBot {
         switch($option) {
           //---
             case 'join':
-                $this->send_message('Description: Forces NickHere to join the specified channel name.');
+                $this->send_message('Description: Forces NinjX to join the specified channel name.');
                 $this->send_message('Syntax: $join #channelName');
                 $this->send_message('Example: $join #hackthissite');
                 break;
           //---
             case 'say':
-                $this->send_message('Description: Forces NickHere to repeat said text.');
+                $this->send_message('Description: Forces NinjX to repeat said text.');
                 $this->send_message('Syntax: $say anything');
                 $this->send_message('Example: $say Hello, my name is NinjX!');
                 break;
           //---
             case 'gtfo':
-                $this->send_message('Description: Forces NickHere to quit.');
+                $this->send_message('Description: Forces NinjX to quit.');
                 $this->send_message('Syntax: $gtfo');
                 break;
           //---
             case 'rand':
-                $this->send_message('Description: NickHere will display a random number between two given digits.');
+                $this->send_message('Description: NinjX will display a random number between two given digits.');
                 $this->send_message('Syntax: $rand Number1 Number2');
                 $this->send_message('Example: $rand 100 150');
                 break;
@@ -992,19 +1310,19 @@ class IRCBot {
                 break;
           //---
             case 'emd5':
-                $this->send_message('Description: NickHere will convert the given text into md5 format.');
+                $this->send_message('Description: NinjX will convert the given text into md5 format.');
                 $this->send_message('Syntax: $emd5 text');
                 $this->send_message('Example: $emd5 myStrongPassword');
                 break;
           //---
             case 'dmd5':
-                $this->send_message('Description: NickHere will run a dictionary attack on said md5 hash.');
+                $this->send_message('Description: NinjX will run a dictionary attack on said md5 hash.');
                 $this->send_message('Syntax: $dmd5 md5Hash');
                 $this->send_message('Example: $dmd5 5f4dcc3b5aa765d61d8327deb882cf99');
                 break;
           //---
             case 'word':
-                $this->send_message('Description: NickHere will add the said string to the dictionary for dictionary attacks.');
+                $this->send_message('Description: NinjX will add the said string to the dictionary for dictionary attacks.');
                 $this->send_message('Syntax: $word text');
                 $this->send_message('Example: $word BiiG->B4ngTh3[0]Ry');
                 break;
@@ -1016,7 +1334,7 @@ class IRCBot {
                 break;
           //---
             case 'math':
-                $this->send_message('Description: NickHere will do math with two numbers (only 1 process at a time and must of spaces)');
+                $this->send_message('Description: NinjX will do math with two numbers (only 1 process at a time and must of spaces)');
                 $this->send_message('Syntax: $math number1 operator number2');
                 $this->send_message('Example: $math 20 * 40');
                 break;
