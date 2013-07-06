@@ -2,23 +2,25 @@
 set_time_limit(0);
 ini_set('display_errors', 'on');
 $config = array(
-        'server' => '', // server, install ssl, use ssl://irc.hackthissite.org (port 7000)
-        'port'   => , // port numbers regular = 6667, ssl = 6697, 7000
-        'channel' => '', // channel name
+        'server' => 'ssl://irc.hackthissite.org', // server, install ssl, use ssl://irc.hackthissite.org (port 7000)
+        'port'   => 7000, // port numbers regular = 6667, ssl = 6697, 7000
+        'channel' => '',
         'name'   => '', // name
         'nick'   => '',  // nick
         'pass'   => '', // password
-	'owner'  => '',
 );
 
 
 // Plan on breaking out of the use of these global variables soon
 
+$owner = ":Ninjex!ninjex@HTS-C0484C46.lightspeed.nsvltn.sbcglobal.net";
 $user = NULL;
 $fullUser = NULL;
 $message = NULL;
 $filesize = NULL;
 $playertotal = NULL;
+$filter = NULL;
+$host = NULL;
 
 class IRCBot {
         var $socket;
@@ -64,15 +66,49 @@ class IRCBot {
 
                         if ((trim($this->ex[1]) == "NOTICE") && ($this->state == 1) && ($nick == "nickserv")) {
                             $this->join_channel($config['channel']);
+                            $this->join_channel('#bots');
                             $this->state++;
                         }
+
 
               //***************************************************************************************************
               //***************************************************************************************************
 /*if($this->ex[0] == ':flurbbot!flurbbot@HTS-DE1BB303.hsd1.ma.comcast.net') {
     $this->send_message('Fuck you flurberty');
-}*/
+}*/ // cursing flurbot
 
+                        $input = NULL;
+                        for($i=1; $i </*=*/ (count($this->ex)); $i++) {
+                            $input .= $this->ex[$i]." ";
+                        }
+                        $input = rtrim($input);
+                        if(preg_match('#hackthissite.org/forums/viewtopic.php?[^\s]*f=([0-9a-zA-Z_\-&=]*)#i',$input,$matches)) {
+                            $site = "http://www.".$matches[0]."&start=0";
+                            $sitedata = $this->get_data($site);
+                            $titlestart = '<title>';
+                            $titleend = '</title>';
+                            $explode_title = explode($titlestart, $sitedata);
+                            $explode_titleb = explode($titleend, $explode_title[1]);
+                            $title = $explode_titleb[0];
+                            $title = substr($title, 41);
+
+                            $opstart = 'by <strong><a href="';
+                            $opend = '</a>';
+                            $op_explode = explode($opstart, $sitedata);
+                            $op_explodeb = explode($opend, $op_explode[1]);
+                            $newsitedata = $op_explodeb[0];
+                            $newend = '">';
+                            $newexplode = explode($newend, $newsitedata);
+                            $poster = $newexplode[1];
+
+                            $this->send_message("Hackthissite Forum Detected, getting details!");
+                            if($this->filter_text($poster) xor $this->filter_text($title) == true) {
+                                $this->send_message("Sorry, that forum has information which is indicated as a a gline or blacklist word, stopping for my convenience!");
+                            }
+                            else {
+                                $this->send_message("Original Poster: ".$poster.", Topic Title: ".$title);
+                            }
+                        }
                         /*for($i=1; $i <= (count($this->ex)); $i++) { // youtube video finder
                             $input .= $this->ex[$i]." ";
                         }
@@ -96,6 +132,38 @@ class IRCBot {
                             $this->send_message("Video Description: ".htmlspecialchars_decode($pieceb[0])."\n");
                         }*/
 
+                        $this->filterlist = array(
+                            'mIRC_Exploit'      =>   '#\x01DCC (SEND|RESUME)[ ]+\"(.+ ){20}#',
+                            'mIRC_Exploit2'     =>   '#\x01DCC (SEND|RESUME).{225}#',
+                            'Fyle_Trojan'       =>   '#Come watch me on my webcam and chat /w me :-\) http://.+:\d+/me\.mpg#',
+                            'Mirseed_Trojan'    =>   '#Speed up your mIRC DCC Transfer by up to 75%.*www\.freewebs\.com/mircupdate/mircspeedup\.exe#',
+                            'Fagot_Worm'        =>   '#^http://www\.angelfire\.com/[a-z0-9]+/[a-z0-9]+/[a-z_]+\.jpg <- .*!#',
+                            'Aplore_Worm'       =>   '#^FREE PORN: http://free:porn@([0-9]{1,3}\.){3}[0-9]{1,3}:8180$#',
+                            'Gbot_Login'        =>   '#^!login Wasszup!$#',
+                            'Gbot_Login2'       =>   '#^!login grrrr yeah baby!$#',
+                            'Gbot_Use'          =>   '#^!packet ([0-9]{1,3}\.){3}[0-9]{1,3} [0-9]{1,15}#',
+                            'Gbot_Use2'         =>   '#^!icqpagebomb ([0-9]{1,15} ){2}.+#',
+                            'Gbot_Use3'         =>   '#^!pfast [0-9]{1,15} ([0-9]{1,3}\.){3}[0-9]{1,3} [0-9]{1,5}$#',
+                            'Gbot_Use4'         =>   '#^!portscan ([0-9]{1,3}\.){3}[0-9]{1,3} [0-9]{1,5} [0-9]{1,5}$#',
+                            'SDBot_Use'         =>   '#^.u(dp)? ([0-9]{1,3}\.){3}[0-9]{1,3} [0-9]{1,15} [0-9]{1,15} [0-9]{1,15}( [0-9])*$#',
+                            'SpyBot_Use'        =>   '#^.syn ((([0-9]{1,3}\.){3}[0-9]{1,3})|([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_.-]+)) [0-9]{1,5} [0-9]{1,15} [0-9]{1,15}#',
+                            'Soex_Trojan'       =>   '#^porn! porno! http://.+\/sexo\.exe#',
+                            'Erotica_Trojan'    =>   '#(^wait a minute plz\. i am updating my site|.*my erotic video).*http://.+/erotic(a)?/myvideo\.exe$#',
+                            'Nkie_Worm'         =>   '#^STOP SPAM, USE THIS COMMAND: //write nospam \$decode\(.+\) \| \.load -rs nospam \| //mode \$me \+R$#',
+                            'Nkie_Worm2'        =>   '#^FOR MATRIX 2 DOWNLOAD, USE THIS COMMAND: //write Matrix2 \$decode\(.+=,m\) \| \.load -rs Matrix2 \| //mode \$me \+R$#',
+                            'Nkie_Worm3'        =>   '#^hey .* to get OPs use this hack in the chan but SHH! //\$decode\(.*,m\) \| \$decode\(.*,m\)$#',
+                            'LOI_Trojan'        =>   '#.*(http://jokes\.clubdepeche\.com|http://horny\.69sexy\.net|http://private\.a123sdsdssddddgfg\.com).*#',
+                            'Gaggle_Worm'       =>   '#C:\\\\WINNT\\\\system32\\\\[][0-9a-z_-{|}`]+\.zip#',
+                            'Gaggle_Worm2'      =>   '#C:\\\\WINNT\\\\system32\\\\(notes|videos|xxx|ManualSeduccion|postal|hechizos|images|sex|avril)\.zip#',
+                            'Gaggle_Worm3'      =>   '#http://.+\.lycos\..+/[iy]server[0-9]/[a-z]{4,11}\.(gif|jpg|avi|txt)#',
+                            'Virus_Backdoor'    =>   '#^Free porn pic.? and movies (www\.sexymovies\.da\.ru|www\.girlporn\.org)#',
+                            'Decode_Exploit'    =>   '#^LOL! //echo -a \$\(\$decode\(.+,m\),[0-9]\)$#',
+                            'Decode_Exploit2'   =>   '#//write \$decode\(.+\|.+load -rs#',
+                            'mIRC_Trojan'       =>   '#^Want To Be An IRCOp\? Try This New Bug Type: //write \$decode\(.+=.?,m\) \| \.load -rs \$decode\(.+=.?,m\)$#',
+                            'Adult_Spam'        =>   '#^Check this out.*http://www\.pornzapp\.com.*#',
+                            'Blacklist_Word'    =>  '#pony#i',
+                            'Blacklist_Word2'   =>  '#nigger#i'
+                        );
 
               switch($command) { // list of commands the bot will respond to from users
                  /* case '::':
@@ -112,8 +180,532 @@ class IRCBot {
                       break;*/
 
               //----------------------------------------------------------------------------------------------------------------
+
+                  case ':$tell':
+                     /* if($this->is_admin() != true) {
+                          $this->send_message("Blocked while testing security...");
+                      }*/
+                      if($this->is_banned() == true) {
+                          break;
+                      }
+                      $user = $this->ex[4];
+                      if($user == 'NinjX') {
+                          $this->send_message("Why would one speak to thyself?");
+                          break;
+                      }
+                      $input = NULL;
+                      for($i=5; $i <= (count($this->ex)); $i++) { // grabbing the message
+                          $input .= $this->ex[$i]." "; // storing the message in input
+                      }
+                      $message = rtrim($input);
+                      if($this->filter_text($message) == true) {
+                          $this->insta_ban();
+                          break;
+                      }
+                      $this->send_data('PRIVMSG '.$user." :> ".$message);
+                      break;
+
+              //------------------------------------------------------------------------------------------------------------------
+
+                  case':$forum':
+                      $this->who_is();
+                      $user = $GLOBALS['user'];
+                      if($this->is_banned() == true) {
+                          break;
+                      }
+                      $site = "https://www.hackthissite.org/forums/search.php?search_id=active_topics";
+                      $pick = rtrim($this->ex[4]);
+                      $addition = $this->ex[5];
+                      if($pick >= 3 || $pick <= 0) {
+                          $this->send_message("Right now, I only search topics 1 and 2, please try again!");
+                          break;
+                      }
+                      $data = $this->get_data($site);
+                      $lasttopicstart = '<li class="row bg'.$pick.'">';
+                      $lasttopicend = '</li>';
+                      $lasttopicexplode = explode($lasttopicstart, $data);
+                      $lasttopicexplodeb = explode($lasttopicend, $lasttopicexplode[1]);
+
+                      $newdata = $lasttopicexplodeb[0];
+                      $titlestart = 'class="topictitle">';
+                      $titleend = '  </a>';
+                      $titleexplode = explode($titlestart, $newdata);
+                      $titleexplodeb = explode($titleend, $titleexplode[1]);
+                      $title = $titleexplodeb[0];
+
+                      $urlstart = '<a href="';
+                      $urlend = '"';
+                      $urlexplode = explode($urlstart, $newdata);
+                      $urlexplodeb = explode($urlend, $urlexplode[1]);
+                      $url = substr($urlexplodeb[0], 1);
+                      $url = htmlspecialchars_decode($url);
+                      $urlb = explode('&sid', $url);
+                      $urlc = "https://www.hackthissite.org/forums".$urlb[0];
+
+                      $bystart = 'by <a href="';
+                      $byend = '</a>';
+                      $byextra = '">';
+                      $byexplode = explode($bystart, $newdata);
+                      $byexplodeb = explode($byend, $byexplode[1]);
+                      $bytemp = $byexplodeb[0];
+                      $by = explode($byextra, $bytemp);
+                      $byb = $by[1];
+
+                      $lastpoststart = '<dd class="lastpost"><span>';
+                      $lastpostend = '</a>';
+                      $lastpostexplode = explode($lastpoststart, $newdata);
+                      $lastpostexplodeb = explode($lastpostend, $lastpostexplode[1]);
+                      $lasttemp = $lastpostexplodeb[0];
+                      $last = explode($byextra, $lasttemp);
+                      $lastb = $last[1];
+
+                      if($this->filter_text($title) xor $this->filter_text($urlb) xor $this->filter_text($byb) xor $this->filter_text($lastb) == true) {
+                          $this->send_message("Some of the content gathered had glined or blacklisted words/phrases, breaking for my safety!");
+                          break;
+                      }
+                      else {
+                          $this->send_message("The information gathered has been sent to your pm feed to mitigate spam!");
+                          $this->send_data('PRIVMSG '.$user." :Forum Topic: ".$title);
+                          $this->send_data('PRIVMSG '.$user.' :URL: '.$urlc);
+                          $this->send_data('PRIVMSG '.$user." :Original Poster: ".$byb);
+                          $this->send_data('PRIVMSG '.$user." :Last Post By: ".$lastb);
+                      }
+
+                      if($addition == 'describe') {
+                          $describestart = '<div class="content">'; // start of search
+                          $describeend = '</div>';                  // end of search
+                          $describedata = $this->get_data($urlc);   // grabbing data
+                          $describeexplode = explode($describestart, $describedata);
+                          $describeexplodeb = explode($describeend, $describeexplode[1]);
+                          $description = $describeexplodeb[0];
+                          if($this->filter_text($description) == true) {
+                            $this->send_message("The description contains glined or banned phrases/words, breaking for my safety!");
+                          }
+                          else {
+                            $pattern = '/<br \/>/i';
+                            $replacement = ' ';
+                            $this->send_data('PRIVMSG '.$user.' :Forum Description: '.preg_replace($pattern, $replacement, htmlspecialchars_decode($description)));
+                          }
+                      }
+                      break;
+
+              //----------------------------------------------------------------------------------------------------------------
+
+                  case':$htsuser':
+                      $this->send_message("All information will be sent to your news feed to mitigate spam!");
+                      $this->who_is();
+                      $person = $GLOBALS['user'];
+                      if($this->is_banned() == true) {
+                          break;
+                      }
+                      $user = $this->ex[4];
+                      $site = "https://www.hackthissite.org/user/view/".$user;
+                      $data = file_get_contents($site);
+
+                      $basics = array(
+                          'basic1' => '<a href="missions/basic/1/">',
+                          'basic2' => '<a href="missions/basic/2/">',
+                          'basic3' => '<a href="missions/basic/3/">',
+                          'basic4' => '<a href="missions/basic/4/">',
+                          'basic5' => '<a href="missions/basic/5/">',
+                          'basic6' => '<a href="missions/basic/6/">',
+                          'basic7' => '<a href="missions/basic/7/">',
+                          'basic8' => '<a href="missions/basic/8/">',
+                          'basic9' => '<a href="missions/basic/9/">',
+                          'basic10' => '<a href="missions/basic/10/">',
+                          'basic11' => '<a href="missions/basic/11/">',
+                      );
+
+                      $realistics = array(
+                          'real1' => '<a href="missions/realistic/1/">',
+                          'real2' => '<a href="missions/realistic/2/">',
+                          'real3' => '<a href="missions/realistic/3/">',
+                          'real4' => '<a href="missions/realistic/4/">',
+                          'real5' => '<a href="missions/realistic/5/">',
+                          'real6' => '<a href="missions/realistic/6/">',
+                          'real7' => '<a href="missions/realistic/7/">',
+                          'real8' => '<a href="missions/realistic/8/">',
+                          'real9' => '<a href="missions/realistic/9/">',
+                          'real10' => '<a href="missions/realistic/10/">',
+                          'real11' => '<a href="missions/realistic/11/">',
+                          'real12' => '<a href="missions/realistic/12/">',
+                          'real13' => '<a href="missions/realistic/13/">',
+                          'real14' => '<a href="missions/realistic/14/">',
+                          'real15' => '<a href="missions/realistic/15/">',
+                          'real16' => '<a href="missions/realistic/16/">',
+                      );
+
+                      $extbasics = array(
+                          'extbasic1' => '<a href="missions/extbasic/1/">',
+                          'extbasic2' => '<a href="missions/extbasic/2/">',
+                          'extbasic3' => '<a href="missions/extbasic/3/">',
+                          'extbasic4' => '<a href="missions/extbasic/4/">',
+                          'extbasic5' => '<a href="missions/extbasic/5/">',
+                          'extbasic6' => '<a href="missions/extbasic/6/">',
+                          'extbasic7' => '<a href="missions/extbasic/7/">',
+                          'extbasic8' => '<a href="missions/extbasic/8/">',
+                          'extbasic9' => '<a href="missions/extbasic/9/">',
+                          'extbasic10' => '<a href="missions/extbasic/10/">',
+                          'extbasic11' => '<a href="missions/extbasic/11/">',
+                          'extbasic12' => '<a href="missions/extbasic/12/">',
+                          'extbasic13' => '<a href="missions/extbasic/13/">',
+                          'extbasic14' => '<a href="missions/extbasic/14/">',
+                      );
+
+                      $applications = array(
+                          'application1' => '<a href="missions/application/#1">',
+                          'application2' => '<a href="missions/application/#2">',
+                          'application3' => '<a href="missions/application/#3">',
+                          'application4' => '<a href="missions/application/#4">',
+                          'application5' => '<a href="missions/application/#5">',
+                          'application6' => '<a href="missions/application/#6">',
+                          'application7' => '<a href="missions/application/#7">',
+                          'application8' => '<a href="missions/application/#8">',
+                          'application9' => '<a href="missions/application/#9">',
+                          'application10' => '<a href="missions/application/#10">',
+                          'application11' => '<a href="missions/application/#11">',
+                          'application12' => '<a href="missions/application/#12">',
+                          'application13' => '<a href="missions/application/#13">',
+                          'application14' => '<a href="missions/application/#14">',
+                          'application15' => '<a href="missions/application/#15">',
+                          'application16' => '<a href="missions/application/#16">',
+                          'application17' => '<a href="missions/application/#17">',
+                          'application18' => '<a href="missions/application/#18">',
+                      );
+
+                      $programmings = array(
+                          'programming1' => '<a href="missions/programming/1/">',
+                          'programming2' => '<a href="missions/programming/2/">',
+                          'programming3' => '<a href="missions/programming/3/">',
+                          'programming4' => '<a href="missions/programming/4/">',
+                          'programming5' => '<a href="missions/programming/5/">',
+                          'programming6' => '<a href="missions/programming/6/">',
+                          'programming7' => '<a href="missions/programming/7/">',
+                          'programming8' => '<a href="missions/programming/8/">',
+                          'programming9' => '<a href="missions/programming/9/">',
+                          'programming10' => '<a href="missions/programming/10/">',
+                          'programming11' => '<a href="missions/programming/11/">',
+                          'programming12' => '<a href="missions/programming/12/">',
+                      );
+
+                      $javascripts = array(
+                          'javascript1' => '<a href="missions/javascript/1/">',
+                          'javascript2' => '<a href="missions/javascript/2/">',
+                          'javascript3' => '<a href="missions/javascript/3/">',
+                          'javascript4' => '<a href="missions/javascript/4/">',
+                          'javascript5' => '<a href="missions/javascript/5/">',
+                          'javascript6' => '<a href="missions/javascript/6/">',
+                          'javascript7' => '<a href="missions/javascript/7/">',
+                      );
+
+                      $stegos = array(
+                          'stego1' => '<a href="missions/stego/1/">',
+                          'stego2' => '<a href="missions/stego/2/">',
+                          'stego3' => '<a href="missions/stego/3/">',
+                          'stego4' => '<a href="missions/stego/4/">',
+                          'stego5' => '<a href="missions/stego/5/">',
+                          'stego6' => '<a href="missions/stego/6/">',
+                          'stego7' => '<a href="missions/stego/7/">',
+                          'stego8' => '<a href="missions/stego/8/">',
+                          'stego9' => '<a href="missions/stego/9/">',
+                          'stego10' => '<a href="missions/stego/10/">',
+                          'stego11' => '<a href="missions/stego/11/">',
+                          'stego12' => '<a href="missions/stego/12/">',
+                          'stego13' => '<a href="missions/stego/13/">',
+                          'stego14' => '<a href="missions/stego/14/">',
+                          'stego15' => '<a href="missions/stego/15/">',
+                          'stego16' => '<a href="missions/stego/16/">',
+                          'stego17' => '<a href="missions/stego/17/">',
+                      );
+//---
+
+                     // $this->send_data('PRIVMSG '.$person." :The user has completed basic challenges: ");
+                      foreach($basics as $basic_mission) {
+                          $piece = explode($basic_mission, $data);
+                          $piece_b = explode("</a>", $piece[1]);
+                          if(strlen($piece_b[0]) <= 1) {
+                              $piece_b[0] = NULL;
+                          }
+                          exec("echo -n '$piece_b[0], ' >> temp.txt");
+                          }
+                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
+                      $temp = fopen("temp2.txt", "r");
+                      while(!feof($temp)) {
+                          $line = rtrim(fgets($temp));
+                          $this->send_data('PRIVMSG '.$person.' :The user has completed basic challenges: '.$line);
+                      }
+                      exec('rm temp.txt');
+                      exec('rm temp2.txt');
+
+//---
+
+                      //$this->send_data('PRIVMSG '.$person.' :'."The user has completed extended basic challenges: ");
+                      foreach($extbasics as $extbasic_mission) {
+                          $piece = explode($extbasic_mission, $data);
+                          $piece_b = explode("</a>", $piece[1]);
+                          if(strlen($piece_b[0]) <= 1) {
+                              $piece_b[0] = NULL;
+                          }
+                          exec("echo -n '$piece_b[0], ' >> temp.txt");
+                      }
+                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
+                      $temp = fopen("temp2.txt", "r");
+                      while(!feof($temp)) {
+                          $line = rtrim(fgets($temp));
+                          $this->send_data('PRIVMSG '.$person.' :The user has completed extended basic challenges:'.$line);
+                      }
+                      exec('rm temp.txt');
+                      exec('rm temp2.txt');
+
+//---
+
+                     // $this->send_data('PRIVMSG '.$person.' :'."The user has completed realistic challenges: ");
+                      foreach($realistics as $real_mission) {
+                          $piece = explode($real_mission, $data);
+                          $piece_b = explode("</a>", $piece[1]);
+                          if(strlen($piece_b[0]) <= 1) {
+                              $piece_b[0] = NULL;
+                          }
+                          exec("echo -n '$piece_b[0], ' >> temp.txt");
+                      }
+                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
+                      $temp = fopen("temp2.txt", "r");
+                      while(!feof($temp)) {
+                          $line = rtrim(fgets($temp));
+                          $this->send_data('PRIVMSG '.$person.' :The user has completed realistic challenges: '.$line);
+                      }
+                      exec('rm temp.txt');
+                      exec('rm temp2.txt');
+
+//---
+
+                     // $this->send_data('PRIVMSG '.$person.' :'."The user has completed application challenges: ");
+                      foreach($applications as $application_mission) {
+                          $piece = explode($application_mission, $data);
+                          $piece_b = explode("</a>", $piece[1]);
+                          if(strlen($piece_b[0]) <= 1) {
+                              $piece_b[0] = NULL;
+                          }
+                          exec("echo -n '$piece_b[0], ' >> temp.txt");
+                      }
+                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
+                      $temp = fopen("temp2.txt", "r");
+                      while(!feof($temp)) {
+                          $line = rtrim(fgets($temp));
+                          $this->send_data('PRIVMSG '.$person.' :The user has completed application challenges: '.$line);
+                      }
+                      exec('rm temp.txt');
+                      exec('rm temp2.txt');
+
+
+//---
+
+                      //$this->send_data('PRIVMSG '.$person.' :'."The user has completed programming challenges: ");
+                      foreach($programmings as $programming_mission) {
+                          $piece = explode($programming_mission, $data);
+                          $piece_b = explode("</a>", $piece[1]);
+                          if(strlen($piece_b[0]) <= 1) {
+                              $piece_b[0] = NULL;
+                          }
+                          exec("echo -n '$piece_b[0], ' >> temp.txt");
+                      }
+                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
+
+                      $temp = fopen("temp2.txt", "r");
+                      while(!feof($temp)) {
+                          $line = rtrim(fgets($temp));
+                          $this->send_data('PRIVMSG '.$person.' :The user has completed programming challenges: '.$line);
+                      }
+                      exec('rm temp.txt');
+                      exec('rm temp2.txt');
+
+//---
+
+                    //  $this->send_data('PRIVMSG '.$person.' :'."The user has completed javascript challenges: ");
+                      foreach($javascripts as $javascript_mission) {
+                          $piece = explode($javascript_mission, $data);
+                          $piece_b = explode("</a>", $piece[1]);
+                          if(strlen($piece_b[0]) <= 1) {
+                              $piece_b[0] = NULL;
+                          }
+                          exec("echo -n '$piece_b[0], ' >> temp.txt");
+                      }
+                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
+
+                      $temp = fopen("temp2.txt", "r");
+                      while(!feof($temp)) {
+                          $line = rtrim(fgets($temp));
+                          $this->send_data('PRIVMSG '.$person.' :The user has completed javascript challenges: '.$line);
+                      }
+                      exec('rm temp.txt');
+                      exec('rm temp2.txt');
+//---
+
+                  //    $this->send_data('PRIVMSG '.$person.' :'."The user has completed stego challenges: ");
+                      foreach($stegos as $stego_mission) {
+                          $piece = explode($stego_mission, $data);
+                          $piece_b = explode("</a>", $piece[1]);
+                          if(strlen($piece_b[0]) <= 1) {
+                              $piece_b[0] = NULL;
+                          }
+                          exec("echo -n '$piece_b[0], ' >> temp.txt");
+                      }
+                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
+                      $temp = fopen("temp2.txt", "r");
+                      while(!feof($temp)) {
+                          $line = rtrim(fgets($temp));
+                          $this->send_data('PRIVMSG '.$person.' :The user has completed stego challenges: '.$line);
+                      }
+                      exec('rm temp.txt');
+                      exec('rm temp2.txt');
+//--
+                  break;
+
+              //----------------------------------------------------------------------------------------------------------------
+
+                  case':$hashit':
+                      if($this->is_banned() == true) {
+                          break;
+                      }
+                      $word = rtrim($this->ex[5]);
+                      $type = rtrim($this->ex[4]);
+                      $md5 = md5($word);
+                      $md5_2 = md5($md5);
+                      $md5_3 = md5($md5_2);
+                      $md5_4 = md5($md5_3);
+                      $md5_5 = md5($md5_4);
+                      $sha1 = hash('sha1', $word);
+                      $sha1_2 = hash('sha1', $sha1);
+                      $sha1_3 = hash('sha1', $sha1_2);
+                      $sha256 = hash('sha256', $word);
+                      $sha384 = hash('sha384', $word);
+                      $sha512 = hash('sha512', $word);
+                      $ripemd160 = hash('ripemd160', $word);
+                      $md5_sha1 = md5(sha1($word));
+                      $sha1_md5 = sha1(md5($word));
+                        switch($type) {
+                        case'md5':
+                         $this->send_message($md5);
+                            break;
+                      //--
+                       case'md52':
+                        $this->send_message($md5_2);
+                            break;
+                      //--
+                       case'md53':
+                        $this->send_message($md5_3);
+                            break;
+                      //--
+                       case'md54':
+                        $this->send_message($md5_4);
+                            break;
+                      //--
+                       case'md55':
+                        $this->send_message($md5_5);
+                            break;
+                      //--
+                       case'sha1':
+                        $this->send_message($sha1);
+                            break;
+                      //--
+                       case'sha12':
+                        $this->send_message($sha1_2);
+                            break;
+                      //--
+                       case'sha13':
+                        $this->send_message($sha1_3);
+                            break;
+                      //--
+                       case'sha256':
+                        $this->send_message($sha256);
+                             break;
+                      //--
+                       case'sha384':
+                        $this->send_message($sha384);
+                            break;
+                      //--
+                       case'sha512':
+                        $this->send_message($sha512);
+                            break;
+                      //--
+                       case'ripe':
+                        $this->send_message($ripemd160);
+                            break;
+                      //--
+                       case'md5sha':
+                        $this->send_message($md5_sha1);
+                            break;
+                      //--
+                       case'shamd5':
+                        $this->send_message($sha1_md5);
+                            break;
+                      //--
+                       case'all':
+                        $this->send_message("Sent hashes to your pm feed in, to mitigate spam!");
+                        $this->who_is();
+                        $person = $GLOBALS['user'];
+                        if($this->filter_text($word) == true) {
+                            $this->insta_ban();
+                            break;
+                        }
+                        $this->send_data('PRIVMSG '.$person." :Hash values for: ".$word);
+                        $this->send_data('PRIVMSG '.$person." :MD5: ".$md5);
+                        $this->send_data('PRIVMSG '.$person." :MD5x2: ".$md5_2);
+                        $this->send_data('PRIVMSG '.$person." :MD5x3: ".$md5_3);
+                        $this->send_data('PRIVMSG '.$person." :MD5x4: ".$md5_4);
+                        $this->send_data('PRIVMSG '.$person." :MD5x5: ".$md5_5);
+                        $this->send_data('PRIVMSG '.$person." :SHA1: ".$sha1);
+                        $this->send_data('PRIVMSG '.$person." :SHA1x2: ".$sha1_2);
+                        $this->send_data('PRIVMSG '.$person." :SHA1x3: ".$sha1_3);
+                        $this->send_data('PRIVMSG '.$person." :SHA256: ".$sha256);
+                        $this->send_data('PRIVMSG '.$person." :SHA384: ".$sha384);
+                        $this->send_data('PRIVMSG '.$person." :SHA512: ".$sha512);
+                        $this->send_data('PRIVMSG '.$person." :RIPEMD160: ".$ripemd160);
+                        $this->send_data('PRIVMSG '.$person." :MD5(SHA1): ".$md5.$md5_sha1);
+                        $this->send_data('PRIVMSG '.$person." :SHA1(MD5): ".$sha1_md5);
+                        break;
+                        }
+                  break;
+
+              //-----------------------------------------------------------------------------------------------------------------
+
+                  case ':$len':
+                      if($this->is_banned() == true) {
+                          break;
+                      }
+                      $word = $this->get_message();
+                      $length = strlen($word);
+                      $this->send_message("The input is: ".$length." characters in length!");
+                      break;
+
+              //----------------------------------------------------------------------------------------------------------------
+
+                  case ':$b2hex':
+                      if($this->is_banned() == true) {
+                          break;
+                      }
+                      $word = $this->get_message();
+                      $hex = bin2hex($word);
+                      $this->send_message($word." converted to hex is: 0x".$hex);
+                      break;
+
+              //-----------------------------------------------------------------------------------------------------------------
+
+                  case ':$h2bin':
+                      if($this->is_banned() == true) {
+                          break;
+                      }
+                      $binary = rtrim($this->ex[4]);
+                      $binary = pack("H*" , $binary);
+                      $this->send_message("The value is: ".$binary);
+                      break;
+              //-----------------------------------------------------------------------------------------------------------------
+
                   case ':$youtube':
-                     $site = $this->ex[4];
+                      if($this->is_banned() == true) {
+                          break;
+                      }
+                      $site = $this->ex[4];
                       $content = file_get_contents($site);
 
                       $search = '<meta name="twitter:title" content="';
@@ -123,12 +715,17 @@ class IRCBot {
                       $piece = explode ('">', $pieces[1]);
 
                      $piecesb = explode($searchb, $content);
-                     $pieceb = explode('">', $content);
+                     $pieceb = explode('">', $piecesb[1]);
 
-                      $this->send_message("Youtube URL: ".htmlspecialchars_decode($piece[0])."Description: ".htmlspecialchars_decode($pieceb[0])."\n");
+                      $this->send_message("Youtube Title: ".htmlspecialchars_decode($piece[0])); //."   Description: [[".htmlspecialchars_decode($pieceb[0])."]]\n");
                       break;
 
+              //-------------------------------------------------------------------------------------------------------------------
+
                   case ':$addplayer':
+                      if($this->is_banned() == true) {
+                          break;
+                      }
                       $this->con_mysql();
                       $health = 100; // health
                       $healthTotal = 100;
@@ -146,6 +743,9 @@ class IRCBot {
                //----------------------------------------------------------------------------------------------------------------
 
                   case ':$register':
+                      if($this->is_banned() == true) {
+                          break;
+                      }
                       $this->who_is();
                       $this->con_mysql();
                       $user = rtrim($GLOBALS['user']);
@@ -160,6 +760,9 @@ class IRCBot {
                //----------------------------------------------------------------------------------------------------------------
 
                   case ':$account': // change to $account with the switch case of login, logout, status
+                      if($this->is_banned() == true) {
+                          break;
+                      }
                       $choice = $this->ex[4];
                       $this->con_mysql();
                       $this->who_is();
@@ -197,6 +800,9 @@ class IRCBot {
                               }
                                   break;
                           case 'status':
+                              if($this->is_banned() == true) {
+                                  break;
+                              }
                               if($this->check_login() == true) {
                                   $this->send_message("You are currently logged in!");
                               }
@@ -243,6 +849,9 @@ class IRCBot {
                //----------------------------------------------------------------------------------------------------------------
 
                   case ':$getplayer':
+                      if($this->is_banned() == true) {
+                          break;
+                      }
                       $this->con_mysql();
                       $user = $this->ex[4];
                       $query = mysql_query("SELECT * FROM players WHERE name='".$user."'");
@@ -276,7 +885,11 @@ class IRCBot {
                               $this->con_mysql(); // connecting to ninja db
                               $user = $this->ex[5]; // grabbing the user to attack
                               if($this->check_login() == "True") { // see if user is logged in
-                                $this->attack_user($user); // send attack request
+                                $attacked = $this->attack_user($user); // send attack request
+                                if($attacked == "INVALID") {
+                                    $this->send_message("The user you are trying to attack is an invalid account!");
+                                    break;
+                                }
                                 $chance = rand(1,2); // 50% chance to get loot
                                 if($chance == 1) {
                                     $random = rand(1,6); // random is to be used to select a sword via the sword_id
@@ -465,6 +1078,26 @@ class IRCBot {
 
             //-------------------------------------------------------------------------------------------------------------------
 
+                  case ':$rmban':
+                      $person = $this->ex[4];
+                      if($this->is_admin() != true) {
+                          $this->send_message("Only the administrator can use this command!");
+                      }
+                      else {
+                          if(strlen($person) < 1) {
+                              $this->send_message("You did not specify a user to unban, breaking for your convenience!");
+                              break;
+                          }
+                          else {
+                              exec("sed '/'$person'/d' baned_users.txt >> temp.txt");
+                              exec("mv temp.txt baned_users.txt");
+                              exec("rm temp.txt");
+                              $this->send_message("Successfully removed the ban from the specified host!");
+                          }
+                      }
+                      break;
+            //-------------------------------------------------------------------------------------------------------------------
+
                   /*
                                                 $who
                                 Display the user's short name and extended name to them
@@ -514,11 +1147,26 @@ class IRCBot {
                     }
                     if($this->is_admin() == true) { // if the user is the admin
                         $this->join_channel($this->ex[4]);
+                        $this->send_message("Joining the channel...");
 				    }
                     else { // if the user is not the admin
                         $this->send_message('Sorry, only Ninjex can use the $join command!');
                     }
                 break;
+
+            //---------------------------------------------------------------------------------------------------------------------
+
+                  case ':$leave':
+                      $channel_to_leave = $this->ex[4];
+                      if($this->is_admin() != true) {
+                          $this->send_message("You are not authorized to use this command!");
+                          break;
+                      }
+                      else {
+                          $this->send_data('PART', $channel_to_leave);
+                      }
+                      break;
+
 
             //---------------------------------------------------------------------------------------------------------------------
 
@@ -599,39 +1247,7 @@ class IRCBot {
 
             //-----------------------------------------------------------------------------------------------------------------------
 
-                  /*
-                                        $dunix
-                        Run a dictionary attack on a unix crypt hash with salt
-                            grab the salt value using substr($hash,0,2)
-                            Take each word in the dictionary and hash it with the salt
-                            compare the result of the hashed dictionary word to the hash
-                            if a match is found, end the loop and echo the word originally
-                            hashed that found a correct compare.
-                   */
 
-			 /* case ':$dunix':
-                $encryption = NULL;
-                $hash = rtrim($this->ex[4]);
-                $salt = substr($hash,0,2);
-                $file = fopen("rockyou.txt", "a+");
-                $this->send_message('Running a dictionary attack on hash: ' . $hash);
-                while(!feof($file) && $encryption != $hash) {
-                    $word = rtrim(fgets($file));
-                    $encryption = crypt($word,$salt);
-                }
-                if($encryption == $hash) {
-                    if(preg_match("/pony/", $word)) {
-                        $this->send_message('p0nieZ are evil, and so are you!');
-                    }
-                    else {
-                        $this->send_message('The value for: ' . $hash . ' is: ' . $word);
-                    }
-                }
-                if($encryption != $hash) {
-                    $this->send_message('The hash value was not located in the dictionary!');
-                }
-                fclose($file);
-				break; /*
 
             //-----------------------------------------------------------------------------------------------------------------------
 
@@ -691,11 +1307,15 @@ class IRCBot {
                   else { // if the user is a mod or admin
                   $md5file = fopen("md5hashes.txt", "a+"); // opening the md5hash file
                   for($i=4; $i <= (count($this->ex)); $i++) { // grabbing the string to hash into md5
-                      if($i == 14) {
+                      if($i >= 14) {
                           $this->send_message("You can only insert 10 words to be hashed and inserted into the file, only 10 hashes entered!");
                           break;
                       }
                       $word = rtrim($this->ex[$i]); // removing trailing whitespace from the word
+                      if($this->filter_text($word) == true) {
+                          $this->insta_ban();
+                          break;
+                      }
                       $hash = md5($word); // hashing the word into md5
                       fwrite($md5file, $hash."\n");
                   }
@@ -735,7 +1355,6 @@ class IRCBot {
                           //$this->send_message("Time elapsed in second(s): ".$time);
                       }
                   }
-                  $this->send_message("Done looking up hashes... Remember to check your pm feed for the discovered hash values");
                   }
                   break;
             //-----------------------------------------------------------------------------------------------------------------------
@@ -777,7 +1396,7 @@ class IRCBot {
                        $md5file = fopen("md5hashes.txt", "a+"); // opening our md5hash file
                        for($i=4; $i <= (count($this->ex)); $i++) { // grabbing our string
                            $word = rtrim($this->ex[$i]); // removing whitespace from string
-                           if($i == 14) {
+                           if($i >= 14) {
                                $this->send_message("You can only insert 10 hashes at a time, only 10 hashes entered!");
                                break;
                            }
@@ -804,23 +1423,39 @@ class IRCBot {
                         break;
                     }
                     $hash = trim($this->ex[4]); // grabbing the hash
+                    if(!preg_match("/[a-fA-F0-9]{32}/", $hash)) {
+                        $this->send_message("The hash was invalid, it should be hex and 32 characters in length.");
+                        break;
+                    }
                     $this->send_message("Searching the lookup table for: ".$hash); // let them know we are about to do the lookup
                     $file = fopen("tempt.txt", "a+"); // opening temp file for found hashes
-                    $start = substr($hash, 0, 3); // grabbing first character of the hash
-                    $md5_file = "dic/".$start.".txt"; // the file is the first character of the hash .txt (i.e, a.txt)
+                    $start = substr($hash, 0, 3); // grabbing first 3 characters of the hash
+                    $md5_file = "dic/".$start.".txt"; // the file is the first 3 characters of the hash .txt (i.e, ab4.txt)
                     exec("grep -m1 '$hash' $md5_file >> tempt.txt"); // getting values from the file and storing them into tempt
                     $count = 0; // setting our count initializer
                     while(!feof($file)) { // while not at the end of our tempt file
-                        $word = fgets($file); // grab the word on the current line
-                        $word = substr($word, 33); // remove the hash and colon from the tempt file
+                        $line = rtrim(fgets($file)); // grab the word on the current line
+                        $word = substr($line, 33); // remove the hash and colon from the tempt file
+                        if(strlen($line) <= 0) {
+                            if(!preg_match("/$hash/", $line)) {
+                                $this->send_message("The value for hash: ".$hash." was not located!");
+                            }
+                        }
+
                         if(strlen($word) >= 1) { // if the word is greater than or equal to 1 in length
-                            $this->send_message("The value of the hash is: ".$word."\n"); // echo the value for the hash
+                            if($this->filter_text($word) == true) {
+                                $this->send_message("The value of the hash is a glined phrase or a blacklisted word, breaking for my safety!");
+                                break;
+                            }
+                            else {
+                                $this->send_message("The value of the hash is: ".$word."\n"); // echo the value for the hash
+                            }
                         }
                         $count++; // add to our count
                     }
-                    if($count <= 1) { // if the count is less than or equal to 1
+                 /*   if($count <= 1) { // if the count is less than or equal to 1
                         $this->send_message("Done looking up hashes... If a word was not displayed, it was not found...");
-                    }
+                    }*/
                     exec("rm tempt.txt"); // remove the tempt file
                 break;
 
@@ -897,7 +1532,12 @@ class IRCBot {
                   $input = rtrim($this->get_message()); // grabbing the user input
                   $input = preg_replace('/[^0-9+*%.\/-]/', '', $input);
                   $sum = $this->do_math($input); // store the return of our input passed through the do_math function into $sum
-                  $this->send_message("The value is: ".$sum); // echo the value*/
+                  if($sum == "NULL") {
+                      break;
+                  }
+                  else {
+                      $this->send_message("The value is: ".$sum); // echo the value*/
+                  }
 				  break;
 
             //-----------------------------------------------------------------------------------------------------------------------
@@ -912,8 +1552,13 @@ class IRCBot {
                       break;
                   }
                   $this->send_message('* is an indicator for mod/owner commands only'); // command reference
-				  $this->send_message('$join*, $gtfo*, $say, $rand, $eunix, $dunix, $emd5, $dmd5, $word, $math, $help command'); // show commands
-				  break;
+                  // admin commands
+                   // $join*, $gtfo*, $leave*, $ban*, $rmban*, $mod*, $rmod*, $rmtemp*, $rmfile*, $addplayer*, $hashfile*, $emd5file*,
+                  // other commands
+                  // $say, $rand, $eunix, $emd5, $math, $md5file, $hashit, $help, $who, $joke, $lulz, $ninja, $getplayer, $register, $account, $tell, $htsuser, $forum, $b2hex, $len, $youtube
+				  $this->send_message('$join*, $gtfo*, $leave*, $ban*, $rmban*, $mod*, $rmod*, $rmtemp*, $rmfile*, $addplayer*, $hashfile*, $emd5file*'); // show commands
+				  $this->send_message('$say, $rand, $eunix, $emd5, $md5, $math, $md5file, $hashit, $help, $who, $joke, $lulz, $ninja, $getplayer, $register, $account, $tell, $htsuser, $forum, $b2hex, $len, $youtube');
+				   break;
 
             //-----------------------------------------------------------------------------------------------------------------------
 
@@ -946,24 +1591,52 @@ class IRCBot {
 
 
         function decrypt_md5($hash) {
+            $this->who_is();
+            $person = $GLOBALS['user'];
             $hash = rtrim($hash); // remove whitespace from the word to lookup
             $start = substr($hash, 0, 3); // grabbing first character of the hash
             $md5_file = "dic/".$start.".txt"; // the file is the first character of the hash in bigdic
                 exec("grep -m1 '$hash' $md5_file >> tempt.txt"); // grep the word and store it in tempt.txt
-            $file = fopen("/home/ninjex/bot/tempt.txt", "a+"); // opening tempt.txt
+            $file = fopen("tempt.txt", "a+"); // opening tempt.txt
             while(!feof($file)) { // while not at the end of tempt.txt
-                $word = fgets($file); // grab the word shold be similar to (hash:value)
-                $word = substr($word, 33); // remove the hash and colon from the word (left with plain text password)
+                $line = rtrim(fgets($file)); // grab the word shold be similar to (hash:value)
+                $word = substr($line, 33); // remove the hash and colon from the word (left with plain text password)
                 if($hash == "d41d8cd98f00b204e9800998ecf8427e") {
                     break;
                 }
+                if(strlen($line) <= 0) {
+                    if(!preg_match("/$hash/", $line)) {
+                        $this->send_data('NOTICE '.$person." :The value for ".$hash." was not found!");
+                    }
+                }
                 if(strlen($word) >= 1) { // if the word is not null such as a carriage return
-                    $this->who_is();
-                    $person = $GLOBALS['user'];
-                    $this->send_data('NOTICE '.$person." :The value for hash: ".$hash." is: ".$word."\n");
+                    if($this->filter_text($word) == true) {
+                        $this->send_data('NOTICE '.$person." :Glined or blacklisted words/phrases were detected, breaking for my safety!");
+                    }
+                    else {
+                        $this->send_data('NOTICE '.$person." :The value for hash: ".$hash." is: ".$word);
+
+                    }
                 }
             }
             exec("rm tempt.txt");
+        }
+
+//-------------------------------------------------------------------------------------------------------------------
+
+        function db_query($query) {
+            $this->con_mysql();
+            while($row = mysql_fetch_row($query)) {
+                foreach($row as $field) {
+                    $this->send_message(stripslashes($field));
+                }
+            }
+        }
+
+//-------------------------------------------------------------------------------------------------------------------
+
+        function get_data($url) {
+            return file_get_contents($url);
         }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -975,9 +1648,9 @@ class IRCBot {
             $checkifuserexists = mysql_query("SELECT name FROM players WHERE name='".$user."'");
             $row = mysql_fetch_array($checkifuserexists);
             if($row['name'] != $user) {
-                $this->send_message("The user you are trying to attack is an invalid account!");
-                break; // may help stop invalid account from retliation
+                return "INVALID";
             }
+            else {
             $this->who_is();
             $attacker = $GLOBALS['user'];
             $user = mysql_real_escape_string($user);
@@ -1042,6 +1715,7 @@ class IRCBot {
             }
 
         }
+        }
 
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -1079,8 +1753,8 @@ class IRCBot {
 
 //-------------------------------------------------------------------------------------------------------------------
         function con_mysql() {
-            mysql_connect('server usually localhost', 'username maybe root?', 'password to username') or die(mysql_error());
-            mysql_select_db("ninja") or die(mysql_error);
+            mysql_connect('server', 'username', 'dbpass') or die(mysql_error());
+            mysql_select_db("dbname") or die(mysql_error);
 
         }
 //-------------------------------------------------------------------------------------------------------------------
@@ -1092,57 +1766,90 @@ class IRCBot {
 //-------------------------------------------------------------------------------------------------------------------
 
         function send_data($cmd, $msg = null) {
-                if($msg == null) { // if the message is null
-                    fputs($this->socket, $cmd."\r\n"); // pass the command through the socket
-                    echo $cmd;
+            if($this->filter_text($msg) == true) {
+                $this->who_is();
+                echo $cmd.'>> NOTICE >> You attempted to manipulate the bot, you will be banned!';
+                $person_b = $GLOBALS['fullUser'];
+                $explodeit = explode('@', $person_b);
+                $host = $explodeit[1];
+                exec("echo '$host' >> baned_users.txt");
+            }
+            else {
+            if($msg == null) { // if the message is null
+                fputs($this->socket, $cmd."\r\n"); // pass the command through the socket
+                echo $cmd;
+            }
+            else { // if the message is not null
+                fputs($this->socket, $cmd.' '.$msg."\r\n\r\n"); // pass the command and message through the socket
+                echo $cmd.' '.$msg."\r\n\r\n";
+            }
+
+        }
+        }
+
+//-------------------------------------------------------------------------------------------------------------------
+        function filter_text($text) {
+            foreach($this->filterlist as $filter) {
+                if(is_array($text)) {
+                    if(preg_match($filter, $text[0])) {
+                        return true;
+                    }
                 }
-                  else { // if the message is not null
-                        fputs($this->socket, $cmd.' '.$msg."\r\n"); // pass the command and message through the socket
-                        echo $cmd.' '.$msg;
-                  }
+                else {
+                    if(preg_match($filter, $text)) {
+                        return true;
+                    }
+                }
+        }
         }
 
 //-------------------------------------------------------------------------------------------------------------------
 
         function get_message() {
             $input = NULL;
-            for($i=4; $i <= (count($this->ex)); $i++) { // grabbing the message
+            for($i=4; $i < (count($this->ex)); $i++) { // grabbing the message
                 $input .= $this->ex[$i]." "; // storing the message in input
             }
-            if(preg_match("/pony/", $input)) { // if pony is found
-                $input = "p0nieZ are evil, and so are you";
+            if($this->filter_text($input) == true) {
+                $this->insta_ban();
             }
-            return trim($input); // return our message
+            else {
+                return trim($input); // return our message
+            }
         }
 
 //-------------------------------------------------------------------------------------------------------------------
 
         function send_message($x) {
             $chan = $this->ex[2]; // grabbing the channel name
+            $x = rtrim($x);
+            $this->who_is();
+            $person = $GLOBALS['user'];
+            if($this->filter_text($x) == true) {
+                $this->insta_ban();
+            }
+            else {
+
+            $message_two = NULL;
             $message = $this->get_message($x); // storing the return of get_message in $message
-            for($i=3; $i <= (count($this->ex)); $i++) { // grabbing  new message starting from ex[3] (shows the command)
+            for($i=3; $i < (count($this->ex)); $i++) { // grabbing  new message starting from ex[3] (shows the command)
                 $message_two .= $this->ex[$i]." "; // storing the new message in mesage_two
             }
             $message_two = trim(substr($message_two, 1)); // removing the colon from message_two
 
-            if($chan == "NinjX") { // if the channel the message is being sent to is the bot
-               $this->who_is(); // get the details of the current user
-               $this->send_data('PRIVMSG Ninjex :Private Message detected from: ' . $GLOBALS['fullUser'] . " the message is: " . $message_two); // let admin know someone is in pm with the bot
-               exec("echo Private message detected from: $GLOBALS[fullUser] the message is: '$message_two' >> bot.log"); // log the pm in bot.log
-               return $this->send_data('PRIVMSG '. $GLOBALS['user'] . ' :> ' . $x); // return the message to the user's name instead of the bot's name
-            }
+                    if($chan == "NinjX") { // if the channel the message is being sent to is the bot
+                        $this->who_is(); // get the details of the current user
+                        $this->send_data('PRIVMSG Ninjex :Private Message detected from: ' . $GLOBALS['fullUser'] . " the message is: " . $message_two."\r\n\r\n"); // let admin know someone is in pm with the bot
+                        exec("echo Private message detected from: $GLOBALS[fullUser] the message is: '$message_two' >> bot.log"); // log the pm in bot.log
+                        return $this->send_data('PRIVMSG '. $GLOBALS['user'] . ' :> ' . $x."\r\n\r\n"); // return the message to the user's name instead of the bot's name
+                    }
 
-            if(preg_match("/pony/", $message) || preg_match("/pony/", $x)) { // if the message contains pony
-                return $this->send_data('PRIVMSG ' . $chan . ' :> p0niez are evil, and so are you!');
-            }
-            else { // if the message does not contain pony
-                $this->who_is();
-               // $this->send_data("PRIVMSG Ninjex :> Command initiated by: " . $GLOBALS['fullUser'] . " the command is: " . $message_two); // let the admin know someone is commanding the bot
-                exec("echo Command initiated by: $GLOBALS[fullUser] the command is: '$message_two' >> bot.log"); // log the command in bot.log
-                return $this->send_data('PRIVMSG ' . $chan . ' :> ' . $x); // return the message to the channel
-            }
+                        $this->who_is();
+                        // $this->send_data("PRIVMSG Ninjex :> Command initiated by: " . $GLOBALS['fullUser'] . " the command is: " . $message_two); // let the admin know someone is commanding the bot
+                        exec("echo Command initiated by: $GLOBALS[fullUser] the command is: '$message_two' >> bot.log"); // log the command in bot.log
+                        return $this->send_data('PRIVMSG ' . $chan . ' :> ' . $x."\r\n\r\n"); // return the message to the channel
+             }
         }
-
 //-------------------------------------------------------------------------------------------------------------------
 
         function join_channel($channel) {
@@ -1160,6 +1867,8 @@ class IRCBot {
 
     function who_is() { // Getting username and fullname from current user
       $who = $this->ex[0]; // storing full user in $who
+      $piece = explode('@', $who);
+      $GLOBALS['host'] = $piece[1];
 	  $GLOBALS['fullUser'] = $who; // setting fullUser to the full username of the user
 	  $who = explode("!",$who); // removing everything up to ! and storing them into $who
 	  $user = $who['0']; // $user equals the first half of the explode (ie. explode("!", "this!is") would = this
@@ -1258,6 +1967,24 @@ class IRCBot {
         $user = $this->ex[4]; // grabbing specified user
         $banfile = fopen("baned_users.txt", "a+"); // opening the ban file
         fwrite($banfile, $user."\n"); // write the specified user to the ban file
+        fclose($banfile);
+    }
+
+//-------------------------------------------------------------------------------------------------------------------
+
+
+    function insta_ban($user) {
+        $this->who_is();
+        $host = $GLOBALS['host'];
+        $banfile = fopen("baned_users.txt", "a+");
+        fwrite($banfile, $host."\n");
+        fclose($banfile);
+        if($this->ex[2] == 'NinjX') {
+            $this->send_data('PRIVMSG '.$GLOBALS['user'].' :NOTICE >> '.$GLOBALS['user'].', you have been banned for attempting to manipulate me!');
+        }
+        else {
+            $this->send_message("NOTICE >> ".$GLOBALS['user']." you have banned for attempting to manipulate me!");
+        }
     }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -1272,14 +1999,191 @@ class IRCBot {
 
     function do_math($input) {
         $result=eval("return ($input);"); // using eval to preform math on the specified input
-        return $result; // return the sum
+        if($result == NULL) {
+            $this->send_message("Invalid characters were assigned in the math function!");
+            return "NULL";
+            break;
+        }
+        else {
+            return $result; // return the sum
+        }
     }
 
 //-------------------------------------------------------------------------------------------------------------------
 
+// create an about statement, that describes the bot
+
     function help_options($option) {
+        $additionalopt = $this->ex[5];
         switch($option) {
-          //---
+          //---            // $len, $youtube
+            case 'leave':
+                $this->send_message('Description: Forces NinjX to leave the desired channel.');
+                $this->send_message('Syntax: $leave ChannelName');
+                $this->send_message('Example: $leave #coffeesh0p');
+                break;
+            //---
+            case 'ban':
+                $this->send_message('Description: Adds the specified user to the ban list.');
+                $this->send_message('Syntax: $ban userHost');
+                $this->send_message('Example: $ban HTS-803BD2F2.blah.something.net');
+                break;
+            //---
+            case 'rmban':
+                $this->send_message('Description: Removes a specified host from the ban list.');
+                $this->send_message('Syntax: $rmban hostName');
+                $this->send_message('Example: $rmban HTS-803BD2F2.blah.something.net');
+                break;
+            //---
+            case 'mod':
+                $this->send_message('Description: Adds a user to the mod list.');
+                $this->send_message('Syntax: $mod fullUsernme');
+                $this->send_message('Example: $mod :Ninjex!ninjex@HTS-C0484C46.lightspeed.nsvltn.sbcglobal.net');
+                break;
+            //---
+            case 'rmod':
+                $this->send_message('Description: Removes a host from the mod list.');
+                $this->send_message('Syntax: $rmod hostName');
+                $this->send_message('Example: $rmod :Ninjex!ninjex@HTS-C0484C46.lightspeed.nsvltn.sbcglobal.net');
+                break;
+            //---
+            case 'rmtemp':
+                $this->send_message('Description: Removes the temp file, used for multiple writes.');
+                $this->send_message('Syntax: $rmtemp');
+                break;
+            //---
+            case 'rmfile':
+                $this->send_message('Description: Removes the file, (md5hashes)  that contains hashes for lookup.');
+                $this->send_message('Syntax: $rmfile');
+                break;
+            //---
+            case 'addplayer':
+                $this->send_message('Description: Adds a player to the ninja database, so that they may play.');
+                $this->send_message('Syntax: $addplayer userName classType (Assassin - speed | Warrior - strength | Elf - health | Archer - defense)');
+                $this->send_message('Example: $addplayer Ninjex Assassin');
+                break;
+            //---
+            case 'hashfile':
+                $this->send_message('Description: Adds a list of hashes to the hashfile, to be looked up via $md5file.');
+                $this->send_message('Syntax: $hashfile hash1 hash2 hash3, etc');
+                $this->send_message('Example: $hashfile 81c3b1024948e425ff92359fde1eef1c 5416d7cd6ef195a0f7622a9c56b55e84 0cc175b9c0f1b6a831c399e269772661');
+                break;
+            //---
+            case 'emd5file':
+                $this->send_message('Description: Takes plaintext words, converts them into md5 and stores them inside the hashfile to be looked up via $md5file.');
+                $this->send_message('Syntax: $emd5file word1 word2 word3');
+                $this->send_message('Example: $emd5file PaSsWord something yolo dude');
+                break;
+            //---
+            case 'md5file':
+                $this->send_message('Description: Looks up all the hashes inside of the hashfile.');
+                $this->send_message('Syntax: $md5file');
+                break;
+            //---
+            case 'hashit':
+                $this->send_message('Description: Converts a word into a hash type, or all the available hash types.');
+                $this->send_message('Syntax 1: $hashit word hashType | Syntax 2: $hashit word all');
+                $this->send_message('Example 1: $hashit dude sha1 | Example 2: $hashit dude all');
+                break;
+            //---
+            case 'who':
+                $this->send_message('Description: Displays your current short and long name, and your privilege type.');
+                $this->send_message('Syntax: $who');
+                break;
+            //---
+            case 'joke':
+                $this->send_message('Description: Says a joke to the specified user.');
+                $this->send_message('Syntax: $joke user');
+                break;
+            //---
+            case 'lulz':
+                $this->send_message('Description: Takes two random users, and makes a funny statement with their names.');
+                $this->send_message('Syntax: $lulz');
+                break;
+            //---
+            case 'ninja':
+                $this->send_message('Make sure you specify this help further using $help ninja choice');
+                $this->send_message('Choices: attack, start');
+                switch($additionalopt) {
+                    case 'attack':
+                        $this->send_message('Description: Attacks another specified player.');
+                        $this->send_message('Syntax: $ninja attack userName');
+                        $this->send_message('Example: $ninja attack Ninjex');
+                        break;
+                }
+                break;
+            //---
+            case 'getplayer':
+                $this->send_message('Description: Gets the details of a specified user account.');
+                $this->send_message('Syntax: $getplayer playerName');
+                $this->send_message('Example: $getplayer Ninjex');
+                break;
+            //---
+            case 'register':
+                $this->send_message('Description: Allows a user to register an account to play Ninja with.');
+                $this->send_message('Syntax: $register password');
+                $this->send_message('Example: $register ap0coL_Ipz!0!');
+                break;
+            //---
+            case 'account':
+                $this->send_message('Make sure you specify this help further using $help account choice');
+                $this->send_message('Choices: info, status, login, logout');
+                switch($additionalopt) { // info, status, login, logout
+                    case 'info':
+                        $this->send_message('Description: Displays your Ninja account information (must be logged in)');
+                        $this->send_message('Syntax: $account info');
+                        break;
+                    case 'status':
+                        $this->send_message('Description: Tells you if you are logged into your Ninja account or not.');
+                        $this->send_message('Syntax: $account status');
+                        break;
+                    case 'login':
+                        $this->send_message('Description: Logs you into your Ninja account.');
+                        $this->send_message('Syntax: $account login password');
+                        $this->send_message('Example: $account login ap0coL_Ipz!0!');
+                        break;
+                    case 'logout':
+                        $this->send_message('Description: Logs you out of your Ninja account (must be logged in)');
+                        $this->send_message('Syntax: $account logout');
+                        break;
+                }
+                break;
+            //---
+            case 'tell':
+                $this->send_message('Description: Sends a specific message to a specific user/channel.');
+                $this->send_message('Syntax: $tell channel/nick message');
+                $this->send_message('Example: $tell Ninjex how are you doing?');
+                break;
+            //---
+            case 'htsuser':
+                $this->send_message('Description: Sends all the accomplishments of a user to your pm.');
+                $this->send_message('Syntax: $htsuser userName');
+                $this->send_message('Example: $htsuser -Ninjex-');
+                break;
+            //---
+            case 'forum':
+                $this->send_message('Description: Grabs the most recent forum information, use describe after the command for a description.');
+                $this->send_message('Syntax 1: $forum 1 describe | Syntax 2: $forum 1 | (1 can be switched out for 2; 1 being the most recent post, and 2 being the second most recent post.');
+                break;
+            //---
+            case 'b2hex':
+                $this->send_message('Description: Converts text/binary into hex');
+                $this->send_message('Syntax: $b2hex stringsAndCharacters');
+                $this->send_message('Example: $b2hex convert this to hex');
+                break;
+            //---
+            case 'len':
+                $this->send_message('Description: Gets the word count of the specified input');
+                $this->send_message('Syntax: $len stringHere | (would return 10)');
+                $this->send_message('Example: $len Ninjex');
+                break;
+            //---
+            case 'youtube':
+                $this->send_message('Description: Shows the youtube title URL with the link');
+                $this->send_message('Syntax: $youtube link');
+                $this->send_message('Example: $youtube https://www.youtube.com/watch?v=BDW0xWXzuCs');
+                break;
+            //---
             case 'join':
                 $this->send_message('Description: Forces NinjX to join the specified channel name.');
                 $this->send_message('Syntax: $join #channelName');
@@ -1315,17 +2219,17 @@ class IRCBot {
                 $this->send_message('Example: $emd5 myStrongPassword');
                 break;
           //---
-            case 'dmd5':
-                $this->send_message('Description: NinjX will run a dictionary attack on said md5 hash.');
-                $this->send_message('Syntax: $dmd5 md5Hash');
-                $this->send_message('Example: $dmd5 5f4dcc3b5aa765d61d8327deb882cf99');
+            case 'md5':
+                $this->send_message('Description: NinjX will run a lookup attack on said md5 hash.');
+                $this->send_message('Syntax: $md5 md5HashValue');
+                $this->send_message('Example: $md5 5f4dcc3b5aa765d61d8327deb882cf99');
                 break;
           //---
-            case 'word':
+         /*   case 'word': // broken for now
                 $this->send_message('Description: NinjX will add the said string to the dictionary for dictionary attacks.');
                 $this->send_message('Syntax: $word text');
                 $this->send_message('Example: $word BiiG->B4ngTh3[0]Ry');
-                break;
+                break;*/
           //---
             case 'help':
                 $this->send_message('Description: Shows you how to use the commands with correct syntax.');
@@ -1334,9 +2238,9 @@ class IRCBot {
                 break;
           //---
             case 'math':
-                $this->send_message('Description: NinjX will do math with two numbers (only 1 process at a time and must of spaces)');
-                $this->send_message('Syntax: $math number1 operator number2');
-                $this->send_message('Example: $math 20 * 40');
+                $this->send_message('Description: NinjX will do math operations (Uses high precedence values) (uses eval)');
+                $this->send_message('Syntax: $math mathOperations');
+                $this->send_message('Example: $math 205*40/3');
                 break;
           //---
             default:
