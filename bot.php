@@ -2,11 +2,11 @@
 set_time_limit(0);
 ini_set('display_errors', 'on');
 $config = array(
-        'server' => 'ssl://irc.hackthissite.org', // server, install ssl, use ssl://irc.hackthissite.org (port 7000)
+        'server' => 'ssl://irc.hackthissite.org',
         'port'   => 7000, // port numbers regular = 6667, ssl = 6697, 7000
-        'channel' => '',
-        'name'   => '', // name
-        'nick'   => '',  // nick
+        'channel' => '#coffeesh0p',
+        'name'   => 'NinjX', // name
+        'nick'   => 'NinjX',  // nick
         'pass'   => '', // password
 );
 
@@ -67,9 +67,9 @@ class IRCBot {
                         if ((trim($this->ex[1]) == "NOTICE") && ($this->state == 1) && ($nick == "nickserv")) {
                             $this->join_channel($config['channel']);
                             $this->join_channel('#bots');
+                            $this->send_data('MODE NinjX +B');
                             $this->state++;
                         }
-
 
               //***************************************************************************************************
               //***************************************************************************************************
@@ -103,7 +103,7 @@ class IRCBot {
 
                             $this->send_message("Hackthissite Forum Detected, getting details!");
                             if($this->filter_text($poster) xor $this->filter_text($title) == true) {
-                                $this->send_message("Sorry, that forum has information which is indicated as a a gline or blacklist word, stopping for my convenience!");
+                                $this->send_message("Sorry, that forum has information which is indicated as a gline or blacklist word, stopping for my convenience!");
                             }
                             else {
                                 $this->send_message("Original Poster: ".$poster.", Topic Title: ".$title);
@@ -131,6 +131,56 @@ class IRCBot {
                             $this->send_message("Youtube URL: ".htmlspecialchars_decode($piece[0])."\n");
                             $this->send_message("Video Description: ".htmlspecialchars_decode($pieceb[0])."\n");
                         }*/
+
+                        $this->morselist = array(
+                            'a'	=>	'.-',
+                            'b'	=>	'-...',
+                            'c'	=>	'-.-.',
+                            'd'	=>	'-..',
+                            'e'      =>      '.',
+                            'f'      =>      '..-.',
+                            'g'      =>      '--.',
+                            'h'      =>      '....',
+                            'i'      =>      '..',
+                            'j'      =>      '.---',
+                            'k'      =>      '-.-',
+                            'l'      =>      '.-..',
+                            'm'      =>      '--',
+                            'n'      =>      '-.',
+                            'o'      =>      '---',
+                            'p'      =>      '.--.',
+                            'q'      =>      '--.-',
+                            'r'      =>      '.-.',
+                            's'      =>      '...',
+                            't'      =>      '-',
+                            'u'      =>      '..-',
+                            'v'      =>      '...-',
+                            'w'      =>      '.--',
+                            'x'      =>      '-..-',
+                            'y'      =>      '-.--',
+                            'z'      =>      '--..',
+                            '0'      =>      '-----',
+                            '1'      =>      '.----',
+                            '2'      =>      '..---',
+                            '3'      =>      '...--',
+                            '4'      =>      '....-',
+                            '5'      =>      '.....',
+                            '6'      =>      '-....',
+                            '7'      =>      '--...',
+                            '8'      =>      '---..',
+                            '9'      =>      '----.',
+                            '.'      =>      '.-.-.-',
+                            ','      =>      '--..--',
+                            '?'     =>      '..--..',
+                            '\''    =>      '.----.',
+                            '!'     =>      '-.-.--',
+                            '/'     =>      '-..-.',
+                            '-'     =>      '-....-',
+                            '"'     =>      '.-..-.',
+                            '('     =>      '-.--.-',
+                            ')'     =>      '-.--.-',
+                            ' '	=>	'/',
+                        );
 
                         $this->filterlist = array(
                             'mIRC_Exploit'      =>   '#\x01DCC (SEND|RESUME)[ ]+\"(.+ ){20}#',
@@ -178,6 +228,21 @@ class IRCBot {
                     }
                     // test code
                       break;*/
+
+              //----------------------------------------------------------------------------------------------------------------
+
+                  case ':$morse':
+                      $string = strtolower($this->get_message());
+                      $len = strlen($string);
+                      $final = NULL;
+                      for($pos = 0; $pos < $len; $pos++) {
+                          $care = $string[$pos];
+                          if(array_key_exists($care, $this->morselist)) {
+                              $final .= $this->morselist[$care]." ";
+                          }
+                      }
+                      $this->send_message($string." converted to morse is: ".rtrim($final));
+                      break;
 
               //----------------------------------------------------------------------------------------------------------------
 
@@ -292,274 +357,38 @@ class IRCBot {
               //----------------------------------------------------------------------------------------------------------------
 
                   case':$htsuser':
+                      // need to break from the \r\n appended to the beginning.
                       $this->send_message("All information will be sent to your news feed to mitigate spam!");
                       $this->who_is();
                       $person = $GLOBALS['user'];
                       if($this->is_banned() == true) {
                           break;
                       }
-                      $user = $this->ex[4];
-                      $site = "https://www.hackthissite.org/user/view/".$user;
-                      $data = file_get_contents($site);
+                      $user =        $this->ex[4];
+                      $site =        'https://www.hackthissite.org/api/'.$user;
+                      $data =        file_get_contents($site);
+                      $value =       explode(":", $data);
+                      $points =      trim($value[1]);
+                      $basic =       trim($value[2]);
+                      $realistic =   trim($value[3]);
+                      $application = trim($value[4]);
+                      $programming = trim($value[5]);
+                      $javascript =  trim($value[6]);
+                      $irc =         trim($value[7]);
+                      $extbasic =    trim($value[8]);
+                      $stego =       trim($value[9]);
 
-                      $basics = array(
-                          'basic1' => '<a href="missions/basic/1/">',
-                          'basic2' => '<a href="missions/basic/2/">',
-                          'basic3' => '<a href="missions/basic/3/">',
-                          'basic4' => '<a href="missions/basic/4/">',
-                          'basic5' => '<a href="missions/basic/5/">',
-                          'basic6' => '<a href="missions/basic/6/">',
-                          'basic7' => '<a href="missions/basic/7/">',
-                          'basic8' => '<a href="missions/basic/8/">',
-                          'basic9' => '<a href="missions/basic/9/">',
-                          'basic10' => '<a href="missions/basic/10/">',
-                          'basic11' => '<a href="missions/basic/11/">',
-                      );
+                      $this->send_data('PRIVMSG '.$person.' :Points: '.$points);
+                      $this->send_data('PRIVMSG '.$person.' :Basic: '.$basic);
+                      $this->send_data('PRIVMSG '.$person.' :Realistic: '.$realistic);
+                      $this->send_data('PRIVMSG '.$person.' :Application: '.$application);
+                      $this->send_data('PRIVMSG '.$person.' :Programming: '.$programming);
+                      $this->send_data('PRIVMSG '.$person.' :JavaScript: '.$javascript);
+                      $this->send_data('PRIVMSG '.$person.' :IRC: '.$irc);
+                      $this->send_data('PRIVMSG '.$person.' :Extbasic: '.$extbasic);
+                      $this->send_data('PRIVMSG '.$person.' :Stego: '.$stego);
 
-                      $realistics = array(
-                          'real1' => '<a href="missions/realistic/1/">',
-                          'real2' => '<a href="missions/realistic/2/">',
-                          'real3' => '<a href="missions/realistic/3/">',
-                          'real4' => '<a href="missions/realistic/4/">',
-                          'real5' => '<a href="missions/realistic/5/">',
-                          'real6' => '<a href="missions/realistic/6/">',
-                          'real7' => '<a href="missions/realistic/7/">',
-                          'real8' => '<a href="missions/realistic/8/">',
-                          'real9' => '<a href="missions/realistic/9/">',
-                          'real10' => '<a href="missions/realistic/10/">',
-                          'real11' => '<a href="missions/realistic/11/">',
-                          'real12' => '<a href="missions/realistic/12/">',
-                          'real13' => '<a href="missions/realistic/13/">',
-                          'real14' => '<a href="missions/realistic/14/">',
-                          'real15' => '<a href="missions/realistic/15/">',
-                          'real16' => '<a href="missions/realistic/16/">',
-                      );
-
-                      $extbasics = array(
-                          'extbasic1' => '<a href="missions/extbasic/1/">',
-                          'extbasic2' => '<a href="missions/extbasic/2/">',
-                          'extbasic3' => '<a href="missions/extbasic/3/">',
-                          'extbasic4' => '<a href="missions/extbasic/4/">',
-                          'extbasic5' => '<a href="missions/extbasic/5/">',
-                          'extbasic6' => '<a href="missions/extbasic/6/">',
-                          'extbasic7' => '<a href="missions/extbasic/7/">',
-                          'extbasic8' => '<a href="missions/extbasic/8/">',
-                          'extbasic9' => '<a href="missions/extbasic/9/">',
-                          'extbasic10' => '<a href="missions/extbasic/10/">',
-                          'extbasic11' => '<a href="missions/extbasic/11/">',
-                          'extbasic12' => '<a href="missions/extbasic/12/">',
-                          'extbasic13' => '<a href="missions/extbasic/13/">',
-                          'extbasic14' => '<a href="missions/extbasic/14/">',
-                      );
-
-                      $applications = array(
-                          'application1' => '<a href="missions/application/#1">',
-                          'application2' => '<a href="missions/application/#2">',
-                          'application3' => '<a href="missions/application/#3">',
-                          'application4' => '<a href="missions/application/#4">',
-                          'application5' => '<a href="missions/application/#5">',
-                          'application6' => '<a href="missions/application/#6">',
-                          'application7' => '<a href="missions/application/#7">',
-                          'application8' => '<a href="missions/application/#8">',
-                          'application9' => '<a href="missions/application/#9">',
-                          'application10' => '<a href="missions/application/#10">',
-                          'application11' => '<a href="missions/application/#11">',
-                          'application12' => '<a href="missions/application/#12">',
-                          'application13' => '<a href="missions/application/#13">',
-                          'application14' => '<a href="missions/application/#14">',
-                          'application15' => '<a href="missions/application/#15">',
-                          'application16' => '<a href="missions/application/#16">',
-                          'application17' => '<a href="missions/application/#17">',
-                          'application18' => '<a href="missions/application/#18">',
-                      );
-
-                      $programmings = array(
-                          'programming1' => '<a href="missions/programming/1/">',
-                          'programming2' => '<a href="missions/programming/2/">',
-                          'programming3' => '<a href="missions/programming/3/">',
-                          'programming4' => '<a href="missions/programming/4/">',
-                          'programming5' => '<a href="missions/programming/5/">',
-                          'programming6' => '<a href="missions/programming/6/">',
-                          'programming7' => '<a href="missions/programming/7/">',
-                          'programming8' => '<a href="missions/programming/8/">',
-                          'programming9' => '<a href="missions/programming/9/">',
-                          'programming10' => '<a href="missions/programming/10/">',
-                          'programming11' => '<a href="missions/programming/11/">',
-                          'programming12' => '<a href="missions/programming/12/">',
-                      );
-
-                      $javascripts = array(
-                          'javascript1' => '<a href="missions/javascript/1/">',
-                          'javascript2' => '<a href="missions/javascript/2/">',
-                          'javascript3' => '<a href="missions/javascript/3/">',
-                          'javascript4' => '<a href="missions/javascript/4/">',
-                          'javascript5' => '<a href="missions/javascript/5/">',
-                          'javascript6' => '<a href="missions/javascript/6/">',
-                          'javascript7' => '<a href="missions/javascript/7/">',
-                      );
-
-                      $stegos = array(
-                          'stego1' => '<a href="missions/stego/1/">',
-                          'stego2' => '<a href="missions/stego/2/">',
-                          'stego3' => '<a href="missions/stego/3/">',
-                          'stego4' => '<a href="missions/stego/4/">',
-                          'stego5' => '<a href="missions/stego/5/">',
-                          'stego6' => '<a href="missions/stego/6/">',
-                          'stego7' => '<a href="missions/stego/7/">',
-                          'stego8' => '<a href="missions/stego/8/">',
-                          'stego9' => '<a href="missions/stego/9/">',
-                          'stego10' => '<a href="missions/stego/10/">',
-                          'stego11' => '<a href="missions/stego/11/">',
-                          'stego12' => '<a href="missions/stego/12/">',
-                          'stego13' => '<a href="missions/stego/13/">',
-                          'stego14' => '<a href="missions/stego/14/">',
-                          'stego15' => '<a href="missions/stego/15/">',
-                          'stego16' => '<a href="missions/stego/16/">',
-                          'stego17' => '<a href="missions/stego/17/">',
-                      );
-//---
-
-                     // $this->send_data('PRIVMSG '.$person." :The user has completed basic challenges: ");
-                      foreach($basics as $basic_mission) {
-                          $piece = explode($basic_mission, $data);
-                          $piece_b = explode("</a>", $piece[1]);
-                          if(strlen($piece_b[0]) <= 1) {
-                              $piece_b[0] = NULL;
-                          }
-                          exec("echo -n '$piece_b[0], ' >> temp.txt");
-                          }
-                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
-                      $temp = fopen("temp2.txt", "r");
-                      while(!feof($temp)) {
-                          $line = rtrim(fgets($temp));
-                          $this->send_data('PRIVMSG '.$person.' :The user has completed basic challenges: '.$line);
-                      }
-                      exec('rm temp.txt');
-                      exec('rm temp2.txt');
-
-//---
-
-                      //$this->send_data('PRIVMSG '.$person.' :'."The user has completed extended basic challenges: ");
-                      foreach($extbasics as $extbasic_mission) {
-                          $piece = explode($extbasic_mission, $data);
-                          $piece_b = explode("</a>", $piece[1]);
-                          if(strlen($piece_b[0]) <= 1) {
-                              $piece_b[0] = NULL;
-                          }
-                          exec("echo -n '$piece_b[0], ' >> temp.txt");
-                      }
-                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
-                      $temp = fopen("temp2.txt", "r");
-                      while(!feof($temp)) {
-                          $line = rtrim(fgets($temp));
-                          $this->send_data('PRIVMSG '.$person.' :The user has completed extended basic challenges:'.$line);
-                      }
-                      exec('rm temp.txt');
-                      exec('rm temp2.txt');
-
-//---
-
-                     // $this->send_data('PRIVMSG '.$person.' :'."The user has completed realistic challenges: ");
-                      foreach($realistics as $real_mission) {
-                          $piece = explode($real_mission, $data);
-                          $piece_b = explode("</a>", $piece[1]);
-                          if(strlen($piece_b[0]) <= 1) {
-                              $piece_b[0] = NULL;
-                          }
-                          exec("echo -n '$piece_b[0], ' >> temp.txt");
-                      }
-                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
-                      $temp = fopen("temp2.txt", "r");
-                      while(!feof($temp)) {
-                          $line = rtrim(fgets($temp));
-                          $this->send_data('PRIVMSG '.$person.' :The user has completed realistic challenges: '.$line);
-                      }
-                      exec('rm temp.txt');
-                      exec('rm temp2.txt');
-
-//---
-
-                     // $this->send_data('PRIVMSG '.$person.' :'."The user has completed application challenges: ");
-                      foreach($applications as $application_mission) {
-                          $piece = explode($application_mission, $data);
-                          $piece_b = explode("</a>", $piece[1]);
-                          if(strlen($piece_b[0]) <= 1) {
-                              $piece_b[0] = NULL;
-                          }
-                          exec("echo -n '$piece_b[0], ' >> temp.txt");
-                      }
-                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
-                      $temp = fopen("temp2.txt", "r");
-                      while(!feof($temp)) {
-                          $line = rtrim(fgets($temp));
-                          $this->send_data('PRIVMSG '.$person.' :The user has completed application challenges: '.$line);
-                      }
-                      exec('rm temp.txt');
-                      exec('rm temp2.txt');
-
-
-//---
-
-                      //$this->send_data('PRIVMSG '.$person.' :'."The user has completed programming challenges: ");
-                      foreach($programmings as $programming_mission) {
-                          $piece = explode($programming_mission, $data);
-                          $piece_b = explode("</a>", $piece[1]);
-                          if(strlen($piece_b[0]) <= 1) {
-                              $piece_b[0] = NULL;
-                          }
-                          exec("echo -n '$piece_b[0], ' >> temp.txt");
-                      }
-                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
-
-                      $temp = fopen("temp2.txt", "r");
-                      while(!feof($temp)) {
-                          $line = rtrim(fgets($temp));
-                          $this->send_data('PRIVMSG '.$person.' :The user has completed programming challenges: '.$line);
-                      }
-                      exec('rm temp.txt');
-                      exec('rm temp2.txt');
-
-//---
-
-                    //  $this->send_data('PRIVMSG '.$person.' :'."The user has completed javascript challenges: ");
-                      foreach($javascripts as $javascript_mission) {
-                          $piece = explode($javascript_mission, $data);
-                          $piece_b = explode("</a>", $piece[1]);
-                          if(strlen($piece_b[0]) <= 1) {
-                              $piece_b[0] = NULL;
-                          }
-                          exec("echo -n '$piece_b[0], ' >> temp.txt");
-                      }
-                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
-
-                      $temp = fopen("temp2.txt", "r");
-                      while(!feof($temp)) {
-                          $line = rtrim(fgets($temp));
-                          $this->send_data('PRIVMSG '.$person.' :The user has completed javascript challenges: '.$line);
-                      }
-                      exec('rm temp.txt');
-                      exec('rm temp2.txt');
-//---
-
-                  //    $this->send_data('PRIVMSG '.$person.' :'."The user has completed stego challenges: ");
-                      foreach($stegos as $stego_mission) {
-                          $piece = explode($stego_mission, $data);
-                          $piece_b = explode("</a>", $piece[1]);
-                          if(strlen($piece_b[0]) <= 1) {
-                              $piece_b[0] = NULL;
-                          }
-                          exec("echo -n '$piece_b[0], ' >> temp.txt");
-                      }
-                      exec("cat temp.txt | tr -d ',' | sed 's/  / /g' >> temp2.txt");
-                      $temp = fopen("temp2.txt", "r");
-                      while(!feof($temp)) {
-                          $line = rtrim(fgets($temp));
-                          $this->send_data('PRIVMSG '.$person.' :The user has completed stego challenges: '.$line);
-                      }
-                      exec('rm temp.txt');
-                      exec('rm temp2.txt');
-//--
-                  break;
+                      break;
 
               //----------------------------------------------------------------------------------------------------------------
 
@@ -786,7 +615,7 @@ class IRCBot {
                                       $exp = $info['exp'];
                                       $healthtotal = $info['healthTotal'];
                                       $this->send_message("General Stats >> Health: ".$health." Max Health: ".$healthtotal.", Speed: ".$speed.", Attack: ".$attack.", Defense: ".$defense.", Name: ".$name.", Level: ".$level.", Class: ".$class.", Exp: ".$exp);
-                              }
+                                  }
                                   while($inventory = mysql_fetch_array($getinventory)) {
                                       $weapon = $inventory['weapon'];
                                       $healthpots = $inventory['healthpot'];
@@ -956,6 +785,7 @@ class IRCBot {
                       break;
 
              //------------------------------------------------------------------------------------------------------------------
+
                     case ':$joke':
                         if($this->is_banned() == true) { // if the user is banned
                             break;
@@ -1146,8 +976,8 @@ class IRCBot {
                         break;
                     }
                     if($this->is_admin() == true) { // if the user is the admin
-                        $this->join_channel($this->ex[4]);
                         $this->send_message("Joining the channel...");
+                        $this->join_channel($this->ex[4]);
 				    }
                     else { // if the user is not the admin
                         $this->send_message('Sorry, only Ninjex can use the $join command!');
@@ -1409,7 +1239,7 @@ class IRCBot {
             //-----------------------------------------------------------------------------------------------------------------------
 
                   /*
-                                                $bdmd5
+                                                $md5
                          Check a lookup table for the given md5 hash value and echo's the value
                             grab the hash to lookup with ex[4]
                             use grep to search the file for the hash value
@@ -1436,26 +1266,33 @@ class IRCBot {
                     while(!feof($file)) { // while not at the end of our tempt file
                         $line = rtrim(fgets($file)); // grab the word on the current line
                         $word = substr($line, 33); // remove the hash and colon from the tempt file
-                        if(strlen($line) <= 0) {
-                            if(!preg_match("/$hash/", $line)) {
-                                $this->send_message("The value for hash: ".$hash." was not located!");
-                            }
-                        }
+                        $piece = explode(":", $line);
+                        $search = $piece[0];
+                           /* if(!preg_match("/$hash/", $line)) {
+                               if(strlen($piece[1] <= 0)) {
+                                   break;
+                               }
+                                else {
+                                    $this->send_message("The value for hash: ".$hash." was not located!");
+                                }
+                            }*/
+                        //}
 
                         if(strlen($word) >= 1) { // if the word is greater than or equal to 1 in length
                             if($this->filter_text($word) == true) {
                                 $this->send_message("The value of the hash is a glined phrase or a blacklisted word, breaking for my safety!");
                                 break;
                             }
+
                             else {
                                 $this->send_message("The value of the hash is: ".$word."\n"); // echo the value for the hash
                             }
                         }
                         $count++; // add to our count
                     }
-                 /*   if($count <= 1) { // if the count is less than or equal to 1
-                        $this->send_message("Done looking up hashes... If a word was not displayed, it was not found...");
-                    }*/
+                    if($count <= 1) { // if the count is less than or equal to 1
+                        $this->send_message("Done looking up the hash... If a value for: ".$hash." was not displayed, it was not found!");
+                    }
                     exec("rm tempt.txt"); // remove the tempt file
                 break;
 
@@ -1530,8 +1367,12 @@ class IRCBot {
                       break;
                   }
                   $input = rtrim($this->get_message()); // grabbing the user input
-                  $input = preg_replace('/[^0-9+*%.\/-]/', '', $input);
-                  $sum = $this->do_math($input); // store the return of our input passed through the do_math function into $sum
+                  //$input = preg_replace('/[0-9+*%.\/-(\*\*)]/', '', $input);
+                  $input = preg_replace('/([0-9.]+)\*\*([0-9.]+)/', 'pow($1, $2)', $input);
+                  $sum = $this->do_math($input);/*
+                  $input = rtrim($this->get_message()); // grabbing the user input
+                  $input = preg_replace('/[0-9+*%.\/-(\*\*)]/', '', $input);
+                  $sum = $this->do_math($input); // store the return of our input passed through the do_math function into $sum*/
                   if($sum == "NULL") {
                       break;
                   }
@@ -1556,8 +1397,8 @@ class IRCBot {
                    // $join*, $gtfo*, $leave*, $ban*, $rmban*, $mod*, $rmod*, $rmtemp*, $rmfile*, $addplayer*, $hashfile*, $emd5file*,
                   // other commands
                   // $say, $rand, $eunix, $emd5, $math, $md5file, $hashit, $help, $who, $joke, $lulz, $ninja, $getplayer, $register, $account, $tell, $htsuser, $forum, $b2hex, $len, $youtube
-				  $this->send_message('$join*, $gtfo*, $leave*, $ban*, $rmban*, $mod*, $rmod*, $rmtemp*, $rmfile*, $addplayer*, $hashfile*, $emd5file*'); // show commands
-				  $this->send_message('$say, $rand, $eunix, $emd5, $md5, $math, $md5file, $hashit, $help, $who, $joke, $lulz, $ninja, $getplayer, $register, $account, $tell, $htsuser, $forum, $b2hex, $len, $youtube');
+				  $this->send_message('$join*, $gtfo*, $leave*, $ban*, $rmban*, $mod*, $rmod*, $rmtemp*, $rmfile*, $addplayer*, $hashfile*, $emd5file*, $htsuser, $forum, $b2hex, $len,'); // show commands
+				  $this->send_message('$say, $rand, $eunix, $emd5, $md5, $math, $md5file, $hashit, $help, $who, $joke, $lulz, $ninja, $getplayer, $register, $account, $tell, $youtube');
 				   break;
 
             //-----------------------------------------------------------------------------------------------------------------------
@@ -1753,8 +1594,8 @@ class IRCBot {
 
 //-------------------------------------------------------------------------------------------------------------------
         function con_mysql() {
-            mysql_connect('server', 'username', 'dbpass') or die(mysql_error());
-            mysql_select_db("dbname") or die(mysql_error);
+            mysql_connect('localhost', 'username', 'pass') or die(mysql_error());
+            mysql_select_db("database") or die(mysql_error);
 
         }
 //-------------------------------------------------------------------------------------------------------------------
