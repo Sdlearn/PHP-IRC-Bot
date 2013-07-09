@@ -2,7 +2,7 @@
 set_time_limit(0);
 ini_set('display_errors', 'on');
 $config = array(
-        'server' => 'ssl://irc.hackthissite.org',
+        'server' => 'ssl://irc.hackthissite.org', // server, install ssl, use ssl://irc.hackthissite.org (port 7000)
         'port'   => 7000, // port numbers regular = 6667, ssl = 6697, 7000
         'channel' => '#coffeesh0p',
         'name'   => 'NinjX', // name
@@ -109,7 +109,7 @@ class IRCBot {
                                 $this->send_message("Original Poster: ".$poster.", Topic Title: ".$title);
                             }
                         }
-                        /*for($i=1; $i <= (count($this->ex)); $i++) { // youtube video finder
+                        /*for($i=1; $i <= (count($this->ex)); $i++) { // youtube video finder disabled since wallbot will do this
                             $input .= $this->ex[$i]." ";
                         }
                         $input = rtrim($input);
@@ -133,53 +133,16 @@ class IRCBot {
                         }*/
 
                         $this->morselist = array(
-                            'a'	=>	'.-',
-                            'b'	=>	'-...',
-                            'c'	=>	'-.-.',
-                            'd'	=>	'-..',
-                            'e'      =>      '.',
-                            'f'      =>      '..-.',
-                            'g'      =>      '--.',
-                            'h'      =>      '....',
-                            'i'      =>      '..',
-                            'j'      =>      '.---',
-                            'k'      =>      '-.-',
-                            'l'      =>      '.-..',
-                            'm'      =>      '--',
-                            'n'      =>      '-.',
-                            'o'      =>      '---',
-                            'p'      =>      '.--.',
-                            'q'      =>      '--.-',
-                            'r'      =>      '.-.',
-                            's'      =>      '...',
-                            't'      =>      '-',
-                            'u'      =>      '..-',
-                            'v'      =>      '...-',
-                            'w'      =>      '.--',
-                            'x'      =>      '-..-',
-                            'y'      =>      '-.--',
-                            'z'      =>      '--..',
-                            '0'      =>      '-----',
-                            '1'      =>      '.----',
-                            '2'      =>      '..---',
-                            '3'      =>      '...--',
-                            '4'      =>      '....-',
-                            '5'      =>      '.....',
-                            '6'      =>      '-....',
-                            '7'      =>      '--...',
-                            '8'      =>      '---..',
-                            '9'      =>      '----.',
-                            '.'      =>      '.-.-.-',
-                            ','      =>      '--..--',
-                            '?'     =>      '..--..',
-                            '\''    =>      '.----.',
-                            '!'     =>      '-.-.--',
-                            '/'     =>      '-..-.',
-                            '-'     =>      '-....-',
-                            '"'     =>      '.-..-.',
-                            '('     =>      '-.--.-',
-                            ')'     =>      '-.--.-',
-                            ' '	=>	'/',
+                            'a'  =>  '.-', 'b'  =>  '-...', 'c'  =>  '-.-.', 'd'  =>  '-..', 'e'  =>  '.',
+                            'f'  =>  '..-.', 'g'  =>  '--.', 'h'  =>  '....', 'i'  =>  '..', 'j'  =>  '.---',
+                            'k'  =>  '-.-', 'l'  =>  '.-..', 'm'  =>  '--', 'n'  =>  '-.', 'o'  =>  '---',
+                            'p'  =>  '.--.', 'q'  =>  '--.-', 'r'  =>  '.-.', 's'  =>  '...', 't'  =>  '-',
+                            'u'  =>  '..-', 'v'  =>  '...-', 'w'  =>  '.--', 'x'  =>  '-..-', 'y'  =>  '-.--',
+                            'z'  =>  '--..', '0'  =>  '-----', '1'  =>  '.----', '2'  =>  '..---', '3'  =>  '...--',
+                            '4'  =>  '....-', '5'  =>  '.....', '6'  =>  '-....', '7'  =>  '--...', '8'  =>  '---..',
+                            '9'  =>  '----.', '.'  =>  '.-.-.-', ','  =>  '--..--', '?'  =>  '..--..', '\''  =>  '.----.',
+                            '!'  =>  '-.-.--', '/'  =>  '-..-.', '-'  =>  '-....-', '"'  =>  '.-..-.', '('  =>  '-.--.-',
+                            ')'  =>  '-.--.-', ' '  =>  '/',
                         );
 
                         $this->filterlist = array(
@@ -215,1215 +178,1112 @@ class IRCBot {
                             'Blacklist_Word2'   =>  '#nigger#i'
                         );
 
-              switch($command) { // list of commands the bot will respond to from users
-                 /* case '::':
-                      $text = $this->get_message();
-                      if(preg_match('/http://www.youtube.com/watch?v=/', $text)) {
-                          $this->send_message("Match found!");
-                      }
-                      $this->send_message("Debugging: ".$text);*/
-                /*case ':$test':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    // test code
-                      break;*/
+//             if($this->is_banned() != true) {
+                        $user_query_name = $this->ex[0]; // :flurbbot!flurbbot@HTS-DE1BB303.hsd1.ma.comcast.net
+                        $user_array = explode('@', $user_query_name);
+                        $user_host = $user_array[1];
+                  if($this->check_ban($user_host) != true) {
+                      switch($command) { // list of commands the bot will respond to from users
+                          case ':$test':
+                              $host = $this->ex[4];
+                              $this->send_message("Debugging, the host being used does it match?... : ".$host);
+                              if($this->check_ban($host) == true) {
 
-              //----------------------------------------------------------------------------------------------------------------
-
-                  case ':$morse':
-                      $string = strtolower($this->get_message());
-                      $len = strlen($string);
-                      $final = NULL;
-                      for($pos = 0; $pos < $len; $pos++) {
-                          $care = $string[$pos];
-                          if(array_key_exists($care, $this->morselist)) {
-                              $final .= $this->morselist[$care]." ";
-                          }
-                      }
-                      $this->send_message($string." converted to morse is: ".rtrim($final));
-                      break;
-
-              //----------------------------------------------------------------------------------------------------------------
-
-                  case ':$tell':
-                     /* if($this->is_admin() != true) {
-                          $this->send_message("Blocked while testing security...");
-                      }*/
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $user = $this->ex[4];
-                      if($user == 'NinjX') {
-                          $this->send_message("Why would one speak to thyself?");
-                          break;
-                      }
-                      $input = NULL;
-                      for($i=5; $i <= (count($this->ex)); $i++) { // grabbing the message
-                          $input .= $this->ex[$i]." "; // storing the message in input
-                      }
-                      $message = rtrim($input);
-                      if($this->filter_text($message) == true) {
-                          $this->insta_ban();
-                          break;
-                      }
-                      $this->send_data('PRIVMSG '.$user." :> ".$message);
-                      break;
-
-              //------------------------------------------------------------------------------------------------------------------
-
-                  case':$forum':
-                      $this->who_is();
-                      $user = $GLOBALS['user'];
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $site = "https://www.hackthissite.org/forums/search.php?search_id=active_topics";
-                      $pick = rtrim($this->ex[4]);
-                      $addition = $this->ex[5];
-                      if($pick >= 3 || $pick <= 0) {
-                          $this->send_message("Right now, I only search topics 1 and 2, please try again!");
-                          break;
-                      }
-                      $data = $this->get_data($site);
-                      $lasttopicstart = '<li class="row bg'.$pick.'">';
-                      $lasttopicend = '</li>';
-                      $lasttopicexplode = explode($lasttopicstart, $data);
-                      $lasttopicexplodeb = explode($lasttopicend, $lasttopicexplode[1]);
-
-                      $newdata = $lasttopicexplodeb[0];
-                      $titlestart = 'class="topictitle">';
-                      $titleend = '  </a>';
-                      $titleexplode = explode($titlestart, $newdata);
-                      $titleexplodeb = explode($titleend, $titleexplode[1]);
-                      $title = $titleexplodeb[0];
-
-                      $urlstart = '<a href="';
-                      $urlend = '"';
-                      $urlexplode = explode($urlstart, $newdata);
-                      $urlexplodeb = explode($urlend, $urlexplode[1]);
-                      $url = substr($urlexplodeb[0], 1);
-                      $url = htmlspecialchars_decode($url);
-                      $urlb = explode('&sid', $url);
-                      $urlc = "https://www.hackthissite.org/forums".$urlb[0];
-
-                      $bystart = 'by <a href="';
-                      $byend = '</a>';
-                      $byextra = '">';
-                      $byexplode = explode($bystart, $newdata);
-                      $byexplodeb = explode($byend, $byexplode[1]);
-                      $bytemp = $byexplodeb[0];
-                      $by = explode($byextra, $bytemp);
-                      $byb = $by[1];
-
-                      $lastpoststart = '<dd class="lastpost"><span>';
-                      $lastpostend = '</a>';
-                      $lastpostexplode = explode($lastpoststart, $newdata);
-                      $lastpostexplodeb = explode($lastpostend, $lastpostexplode[1]);
-                      $lasttemp = $lastpostexplodeb[0];
-                      $last = explode($byextra, $lasttemp);
-                      $lastb = $last[1];
-
-                      if($this->filter_text($title) xor $this->filter_text($urlb) xor $this->filter_text($byb) xor $this->filter_text($lastb) == true) {
-                          $this->send_message("Some of the content gathered had glined or blacklisted words/phrases, breaking for my safety!");
-                          break;
-                      }
-                      else {
-                          $this->send_message("The information gathered has been sent to your pm feed to mitigate spam!");
-                          $this->send_data('PRIVMSG '.$user." :Forum Topic: ".$title);
-                          $this->send_data('PRIVMSG '.$user.' :URL: '.$urlc);
-                          $this->send_data('PRIVMSG '.$user." :Original Poster: ".$byb);
-                          $this->send_data('PRIVMSG '.$user." :Last Post By: ".$lastb);
-                      }
-
-                      if($addition == 'describe') {
-                          $describestart = '<div class="content">'; // start of search
-                          $describeend = '</div>';                  // end of search
-                          $describedata = $this->get_data($urlc);   // grabbing data
-                          $describeexplode = explode($describestart, $describedata);
-                          $describeexplodeb = explode($describeend, $describeexplode[1]);
-                          $description = $describeexplodeb[0];
-                          if($this->filter_text($description) == true) {
-                            $this->send_message("The description contains glined or banned phrases/words, breaking for my safety!");
-                          }
-                          else {
-                            $pattern = '/<br \/>/i';
-                            $replacement = ' ';
-                            $this->send_data('PRIVMSG '.$user.' :Forum Description: '.preg_replace($pattern, $replacement, htmlspecialchars_decode($description)));
-                          }
-                      }
-                      break;
-
-              //----------------------------------------------------------------------------------------------------------------
-
-                  case':$htsuser':
-                      // need to break from the \r\n appended to the beginning.
-                      $this->send_message("All information will be sent to your news feed to mitigate spam!");
-                      $this->who_is();
-                      $person = $GLOBALS['user'];
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $user =        $this->ex[4];
-                      $site =        'https://www.hackthissite.org/api/'.$user;
-                      $data =        file_get_contents($site);
-                      $value =       explode(":", $data);
-                      $points =      trim($value[1]);
-                      $basic =       trim($value[2]);
-                      $realistic =   trim($value[3]);
-                      $application = trim($value[4]);
-                      $programming = trim($value[5]);
-                      $javascript =  trim($value[6]);
-                      $irc =         trim($value[7]);
-                      $extbasic =    trim($value[8]);
-                      $stego =       trim($value[9]);
-
-                      $this->send_data('PRIVMSG '.$person.' :Points: '.$points);
-                      $this->send_data('PRIVMSG '.$person.' :Basic: '.$basic);
-                      $this->send_data('PRIVMSG '.$person.' :Realistic: '.$realistic);
-                      $this->send_data('PRIVMSG '.$person.' :Application: '.$application);
-                      $this->send_data('PRIVMSG '.$person.' :Programming: '.$programming);
-                      $this->send_data('PRIVMSG '.$person.' :JavaScript: '.$javascript);
-                      $this->send_data('PRIVMSG '.$person.' :IRC: '.$irc);
-                      $this->send_data('PRIVMSG '.$person.' :Extbasic: '.$extbasic);
-                      $this->send_data('PRIVMSG '.$person.' :Stego: '.$stego);
-
-                      break;
-
-              //----------------------------------------------------------------------------------------------------------------
-
-                  case':$hashit':
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $word = rtrim($this->ex[5]);
-                      $type = rtrim($this->ex[4]);
-                      $md5 = md5($word);
-                      $md5_2 = md5($md5);
-                      $md5_3 = md5($md5_2);
-                      $md5_4 = md5($md5_3);
-                      $md5_5 = md5($md5_4);
-                      $sha1 = hash('sha1', $word);
-                      $sha1_2 = hash('sha1', $sha1);
-                      $sha1_3 = hash('sha1', $sha1_2);
-                      $sha256 = hash('sha256', $word);
-                      $sha384 = hash('sha384', $word);
-                      $sha512 = hash('sha512', $word);
-                      $ripemd160 = hash('ripemd160', $word);
-                      $md5_sha1 = md5(sha1($word));
-                      $sha1_md5 = sha1(md5($word));
-                        switch($type) {
-                        case'md5':
-                         $this->send_message($md5);
-                            break;
-                      //--
-                       case'md52':
-                        $this->send_message($md5_2);
-                            break;
-                      //--
-                       case'md53':
-                        $this->send_message($md5_3);
-                            break;
-                      //--
-                       case'md54':
-                        $this->send_message($md5_4);
-                            break;
-                      //--
-                       case'md55':
-                        $this->send_message($md5_5);
-                            break;
-                      //--
-                       case'sha1':
-                        $this->send_message($sha1);
-                            break;
-                      //--
-                       case'sha12':
-                        $this->send_message($sha1_2);
-                            break;
-                      //--
-                       case'sha13':
-                        $this->send_message($sha1_3);
-                            break;
-                      //--
-                       case'sha256':
-                        $this->send_message($sha256);
-                             break;
-                      //--
-                       case'sha384':
-                        $this->send_message($sha384);
-                            break;
-                      //--
-                       case'sha512':
-                        $this->send_message($sha512);
-                            break;
-                      //--
-                       case'ripe':
-                        $this->send_message($ripemd160);
-                            break;
-                      //--
-                       case'md5sha':
-                        $this->send_message($md5_sha1);
-                            break;
-                      //--
-                       case'shamd5':
-                        $this->send_message($sha1_md5);
-                            break;
-                      //--
-                       case'all':
-                        $this->send_message("Sent hashes to your pm feed in, to mitigate spam!");
-                        $this->who_is();
-                        $person = $GLOBALS['user'];
-                        if($this->filter_text($word) == true) {
-                            $this->insta_ban();
-                            break;
-                        }
-                        $this->send_data('PRIVMSG '.$person." :Hash values for: ".$word);
-                        $this->send_data('PRIVMSG '.$person." :MD5: ".$md5);
-                        $this->send_data('PRIVMSG '.$person." :MD5x2: ".$md5_2);
-                        $this->send_data('PRIVMSG '.$person." :MD5x3: ".$md5_3);
-                        $this->send_data('PRIVMSG '.$person." :MD5x4: ".$md5_4);
-                        $this->send_data('PRIVMSG '.$person." :MD5x5: ".$md5_5);
-                        $this->send_data('PRIVMSG '.$person." :SHA1: ".$sha1);
-                        $this->send_data('PRIVMSG '.$person." :SHA1x2: ".$sha1_2);
-                        $this->send_data('PRIVMSG '.$person." :SHA1x3: ".$sha1_3);
-                        $this->send_data('PRIVMSG '.$person." :SHA256: ".$sha256);
-                        $this->send_data('PRIVMSG '.$person." :SHA384: ".$sha384);
-                        $this->send_data('PRIVMSG '.$person." :SHA512: ".$sha512);
-                        $this->send_data('PRIVMSG '.$person." :RIPEMD160: ".$ripemd160);
-                        $this->send_data('PRIVMSG '.$person." :MD5(SHA1): ".$md5.$md5_sha1);
-                        $this->send_data('PRIVMSG '.$person." :SHA1(MD5): ".$sha1_md5);
-                        break;
-                        }
-                  break;
-
-              //-----------------------------------------------------------------------------------------------------------------
-
-                  case ':$len':
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $word = $this->get_message();
-                      $length = strlen($word);
-                      $this->send_message("The input is: ".$length." characters in length!");
-                      break;
-
-              //----------------------------------------------------------------------------------------------------------------
-
-                  case ':$b2hex':
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $word = $this->get_message();
-                      $hex = bin2hex($word);
-                      $this->send_message($word." converted to hex is: 0x".$hex);
-                      break;
-
-              //-----------------------------------------------------------------------------------------------------------------
-
-                  case ':$h2bin':
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $binary = rtrim($this->ex[4]);
-                      $binary = pack("H*" , $binary);
-                      $this->send_message("The value is: ".$binary);
-                      break;
-              //-----------------------------------------------------------------------------------------------------------------
-
-                  case ':$youtube':
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $site = $this->ex[4];
-                      $content = file_get_contents($site);
-
-                      $search = '<meta name="twitter:title" content="';
-                      $searchb = '<meta name="twitter:description" content="';
-
-                      $pieces = explode($search, $content);
-                      $piece = explode ('">', $pieces[1]);
-
-                     $piecesb = explode($searchb, $content);
-                     $pieceb = explode('">', $piecesb[1]);
-
-                      $this->send_message("Youtube Title: ".htmlspecialchars_decode($piece[0])); //."   Description: [[".htmlspecialchars_decode($pieceb[0])."]]\n");
-                      break;
-
-              //-------------------------------------------------------------------------------------------------------------------
-
-                  case ':$addplayer':
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $this->con_mysql();
-                      $health = 100; // health
-                      $healthTotal = 100;
-                      $speed = 100; //speed
-                      $attack = 100; // attack
-                      $defense = 100;// defense
-                      $name = $this->ex[4]; //name
-                      $level = 1; // level
-                      $class = $this->ex[5]; //level
-                      mysql_query("INSERT INTO players (health, healthTotal, speed, attack, defense, name, level, class) VALUES ('".$health."', '".$healthtotal."', ".$speed."', '".$attack."', '".$defense."', '".$name."', '".$level."', '".$class."')");
-                      $this->send_message("Query sent, check to make sure it worked...");
-                      break;
-
-
-               //----------------------------------------------------------------------------------------------------------------
-
-                  case ':$register':
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $this->who_is();
-                      $this->con_mysql();
-                      $user = rtrim($GLOBALS['user']);
-                      $pass = $this->ex[4];
-                      $salt = "0osdf87ijflkj";
-                      $pass = $salt.$pass;
-                      $pass = md5(rtrim($pass));
-                      mysql_query("INSERT INTO ninja_login (login_name, login_pass) VALUES ('".$user."', '".$pass."')");
-                      $this->send_message("You have successfully registered an account!");
-                      break;
-
-               //----------------------------------------------------------------------------------------------------------------
-
-                  case ':$account': // change to $account with the switch case of login, logout, status
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $choice = $this->ex[4];
-                      $this->con_mysql();
-                      $this->who_is();
-                      $user = $GLOBALS['user'];
-                      switch($choice) {
-                          case 'info':
-                              if($this->check_login() != true) {
-                                  $this->send_message("You must first be logged in to get the account details!");
+                                  $this->send_message("The host is banned...");
                               }
                               else {
-                                  $getinfo = mysql_query("SELECT * FROM players WHERE name='".$user."'");
-                                  $getinventory = mysql_query("SELECT * FROM inventory WHERE name='".$user."'");
-                                  while($info = mysql_fetch_array($getinfo)) {
-                                      $health = $info['health'];
-                                      $speed = $info['speed'];
-                                      $attack = $info['attack'];
-                                      $defense = $info['defense'];
-                                      $name = $info['name'];
-                                      $level = $info['level'];
-                                      $class = $info['class'];
-                                      $exp = $info['exp'];
-                                      $healthtotal = $info['healthTotal'];
-                                      $this->send_message("General Stats >> Health: ".$health." Max Health: ".$healthtotal.", Speed: ".$speed.", Attack: ".$attack.", Defense: ".$defense.", Name: ".$name.", Level: ".$level.", Class: ".$class.", Exp: ".$exp);
-                                  }
-                                  while($inventory = mysql_fetch_array($getinventory)) {
-                                      $weapon = $inventory['weapon'];
-                                      $healthpots = $inventory['healthpot'];
-                                      $poisonpots = $inventory['poisonpot'];
-                                      $gold = $inventory['gold'];
-                                      $armor = $inventory['armor'];
-                                      $helmet = $inventory['helmet'];
-                                      $leggings = $inventory['leggings'];
-                                      $this->send_message("Equiped With >> Weapon: ".$weapon.", Armor: ".$armor.", Helmet: ".$helmet.", Leggings: ".$leggings.", Gold: ".$gold.", Health Potions: ".$healthpots.", Poison Potions: ".$poisonpots);
+                                  $this->send_message("The host is not banned...");
+                              }
+                              break;
+
+                          //----------------------------------------------------------------------------------------------------------------
+
+                          case ':$morse':
+                              $string = strtolower($this->get_message());
+                              $len = strlen($string);
+                              $final = NULL;
+                              for($pos = 0; $pos < $len; $pos++) {
+                                  $care = $string[$pos];
+                                  if(array_key_exists($care, $this->morselist)) {
+                                      $final .= $this->morselist[$care]." ";
                                   }
                               }
-                                  break;
-                          case 'status':
-                              if($this->is_banned() == true) {
+                              $this->send_message($string." converted to morse is: ".rtrim($final));
+                              break;
+
+                          //----------------------------------------------------------------------------------------------------------------
+
+                          case ':$tell':
+                              /* if($this->is_admin() != true) {
+                                   $this->send_message("Blocked while testing security...");
+                               }*/
+                              $user = $this->ex[4];
+                              if($user == 'NinjX') {
+                                  $this->send_message("Why would one speak to thyself?");
                                   break;
                               }
-                              if($this->check_login() == true) {
-                                  $this->send_message("You are currently logged in!");
+                              $input = NULL;
+                              for($i=5; $i <= (count($this->ex)); $i++) { // grabbing the message
+                                  $input .= $this->ex[$i]." "; // storing the message in input
+                              }
+                              $message = rtrim($input);
+                              if($this->filter_text($message) == true) {
+                                  $this->insta_ban();
+                                  break;
+                              }
+                              $this->send_data('PRIVMSG '.$user." :> ".$message);
+                              break;
+
+                          //------------------------------------------------------------------------------------------------------------------
+
+                          case':$forum':
+                              $this->who_is();
+                              $user = $GLOBALS['user'];
+                              $site = "https://www.hackthissite.org/forums/search.php?search_id=active_topics";
+                              $pick = rtrim($this->ex[4]);
+                              $addition = $this->ex[5];
+                              if($pick >= 3 || $pick <= 0) {
+                                  $this->send_message("Right now, I only search topics 1 and 2, please try again!");
+                                  break;
+                              }
+                              $data = $this->get_data($site);
+                              $lasttopicstart = '<li class="row bg'.$pick.'">';
+                              $lasttopicend = '</li>';
+                              $lasttopicexplode = explode($lasttopicstart, $data);
+                              $lasttopicexplodeb = explode($lasttopicend, $lasttopicexplode[1]);
+
+                              $newdata = $lasttopicexplodeb[0];
+                              $titlestart = 'class="topictitle">';
+                              $titleend = '  </a>';
+                              $titleexplode = explode($titlestart, $newdata);
+                              $titleexplodeb = explode($titleend, $titleexplode[1]);
+                              $title = $titleexplodeb[0];
+
+                              $urlstart = '<a href="';
+                              $urlend = '"';
+                              $urlexplode = explode($urlstart, $newdata);
+                              $urlexplodeb = explode($urlend, $urlexplode[1]);
+                              $url = substr($urlexplodeb[0], 1);
+                              $url = htmlspecialchars_decode($url);
+                              $urlb = explode('&sid', $url);
+                              $urlc = "https://www.hackthissite.org/forums".$urlb[0];
+
+                              $bystart = 'by <a href="';
+                              $byend = '</a>';
+                              $byextra = '">';
+                              $byexplode = explode($bystart, $newdata);
+                              $byexplodeb = explode($byend, $byexplode[1]);
+                              $bytemp = $byexplodeb[0];
+                              $by = explode($byextra, $bytemp);
+                              $byb = $by[1];
+
+                              $lastpoststart = '<dd class="lastpost"><span>';
+                              $lastpostend = '</a>';
+                              $lastpostexplode = explode($lastpoststart, $newdata);
+                              $lastpostexplodeb = explode($lastpostend, $lastpostexplode[1]);
+                              $lasttemp = $lastpostexplodeb[0];
+                              $last = explode($byextra, $lasttemp);
+                              $lastb = $last[1];
+
+                              if($this->filter_text($title) xor $this->filter_text($urlb) xor $this->filter_text($byb) xor $this->filter_text($lastb) == true) {
+                                  $this->send_message("Some of the content gathered had glined or blacklisted words/phrases, breaking for my safety!");
+                                  break;
                               }
                               else {
-                                  $this->send_message("You are not logged into an account!");
+                                  $this->send_message("The information gathered has been sent to your pm feed to mitigate spam!");
+                                  $this->send_data('PRIVMSG '.$user." :Forum Topic: ".$title);
+                                  $this->send_data('PRIVMSG '.$user.' :URL: '.$urlc);
+                                  $this->send_data('PRIVMSG '.$user." :Original Poster: ".$byb);
+                                  $this->send_data('PRIVMSG '.$user." :Last Post By: ".$lastb);
                               }
-                              break;
-                          case'login':
-                              $pass = $this->ex[5]; // if the user placed a password here
-                              //$this->check_login($pass);
-                              $salt = "0osdf87ijflkj";
-                              $pass = rtrim(md5($salt.$pass));
-                              $value = "True";
-                              $getpass = mysql_query("SELECT login_pass FROM ninja_login WHERE login_name='".$user."'");
-                              while($row = mysql_fetch_array($getpass)) {
-                                  if($row['login_pass'] == $pass) {
-                                      mysql_query("UPDATE ninja_login SET logged_in='".$value."' WHERE login_name='".$user."'"); // Query to set logged_in to "True"
-                                      $this->send_message("You have successfully logged in!");
-                                      break;
+
+                              if($addition == 'describe') {
+                                  $describestart = '<div class="content">'; // start of search
+                                  $describeend = '</div>';                  // end of search
+                                  $describedata = $this->get_data($urlc);   // grabbing data
+                                  $describeexplode = explode($describestart, $describedata);
+                                  $describeexplodeb = explode($describeend, $describeexplode[1]);
+                                  $description = $describeexplodeb[0];
+                                  if($this->filter_text($description) == true) {
+                                      $this->send_message("The description contains glined or banned phrases/words, breaking for my safety!");
                                   }
-                                  else{
-                                      $this->send_message("ERROR: The password did not match for your username!");
-                                      break;
-                                  }
-                              }
-                              break;
-                          case 'logout':
-                              if($this->check_login() == false) {
-                              $this->send_message("You can not log out of an account you are not logged into!");
-                              break;
-                          }
-                              $query = mysql_query("SELECT logged_in FROM ninja_login WHERE login_name='".$user."'");
-                              $false = "False";
-                              while($row = mysql_fetch_array($query)) {
-                                  if($row['logged_in'] == "True") {
-                                      mysql_query("UPDATE ninja_login SET logged_in='".$false."'");
-                                      $this->send_message("You have successfully logged out!");
-                                      break;
-                                  }
-                              }
-                      }
-                    break;
-
-               //----------------------------------------------------------------------------------------------------------------
-
-                  case ':$getplayer':
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                      $this->con_mysql();
-                      $user = $this->ex[4];
-                      $query = mysql_query("SELECT * FROM players WHERE name='".$user."'");
-                      while($row = mysql_fetch_array($query)) {
-                          $this->send_message("The user is: ".$row['name']." and has ".$row['health']." health!");
-                         /* foreach($row as $message) {
-                              $this->send_message($message);
-                          }*/
-                      }
-                      break;
-              //-----------------------------------------------------------------------------------------------------------------
-
-                  case ':$ninja':
-                      $this->con_mysql();
-                      if($this->is_banned() == true) {
-                          break;
-                      }
-                     // if($this->is_admin() != true) {
-                       //   $this->send_message("Protecting this function from the l337 kids around the block!");
-                    //  }
-                      if($this->is_admin() xor $this->is_mod() != true) {
-                          $this->send_message("You are not authorized to use this command, sorry!");
-                          break;
-                      }
-                      switch($this->ex[4]) {
-                          case 'start':
-
-                              break;
-
-                          case 'attack':
-                              $this->con_mysql(); // connecting to ninja db
-                              $user = $this->ex[5]; // grabbing the user to attack
-                              if($this->check_login() == "True") { // see if user is logged in
-                                $attacked = $this->attack_user($user); // send attack request
-                                if($attacked == "INVALID") {
-                                    $this->send_message("The user you are trying to attack is an invalid account!");
-                                    break;
-                                }
-                                $chance = rand(1,2); // 50% chance to get loot
-                                if($chance == 1) {
-                                    $random = rand(1,6); // random is to be used to select a sword via the sword_id
-                                    $query = mysql_query("SELECT type FROM swords WHERE sword_id='".$random."'");
-                                    $this->send_message("You found a ".$query);
-                                    /*while($row = mysql_fetch_array($query)) {
-                                        $que = "SELECT "
-                                        $this->send_message("You have found a ".$row["$random"]);
-                                    }*/
-                                }
                                   else {
-                                      $this->send_message("No loot was found!");
+                                      $pattern = '/<br \/>/i';
+                                      $replacement = ' ';
+                                      $this->send_data('PRIVMSG '.$user.' :Forum Description: '.preg_replace($pattern, $replacement, htmlspecialchars_decode($description)));
                                   }
                               }
-                              else {
-                                  $this->send_message("You must be logged in to attack another player!");
+                              break;
+
+                          //----------------------------------------------------------------------------------------------------------------
+
+                          case':$htsuser':
+                              // need to break from the \r\n appended to the beginning.
+                              $this->send_message("All information will be sent to your news feed to mitigate spam!");
+                              $this->who_is();
+                              $person = $GLOBALS['user'];
+                              $user =        $this->ex[4];
+                              $site =        'https://www.hackthissite.org/api/'.$user;
+                              $data =        file_get_contents($site);
+                              $value =       explode(":", $data);
+                              $points =      trim($value[1]);
+                              $basic =       trim($value[2]);
+                              $realistic =   trim($value[3]);
+                              $application = trim($value[4]);
+                              $programming = trim($value[5]);
+                              $javascript =  trim($value[6]);
+                              $irc =         trim($value[7]);
+                              $extbasic =    trim($value[8]);
+                              $stego =       trim($value[9]);
+
+                              $this->send_data('PRIVMSG '.$person.' :Points: '.$points);
+                              $this->send_data('PRIVMSG '.$person.' :Basic: '.$basic);
+                              $this->send_data('PRIVMSG '.$person.' :Realistic: '.$realistic);
+                              $this->send_data('PRIVMSG '.$person.' :Application: '.$application);
+                              $this->send_data('PRIVMSG '.$person.' :Programming: '.$programming);
+                              $this->send_data('PRIVMSG '.$person.' :JavaScript: '.$javascript);
+                              $this->send_data('PRIVMSG '.$person.' :IRC: '.$irc);
+                              $this->send_data('PRIVMSG '.$person.' :Extbasic: '.$extbasic);
+                              $this->send_data('PRIVMSG '.$person.' :Stego: '.$stego);
+
+                              break;
+
+                          //----------------------------------------------------------------------------------------------------------------
+
+                          case':$hashit':
+                              $word = rtrim($this->ex[5]);
+                              $type = rtrim($this->ex[4]);
+                              $md5 = md5($word);
+                              $md5_2 = md5($md5);
+                              $md5_3 = md5($md5_2);
+                              $md5_4 = md5($md5_3);
+                              $md5_5 = md5($md5_4);
+                              $sha1 = hash('sha1', $word);
+                              $sha1_2 = hash('sha1', $sha1);
+                              $sha1_3 = hash('sha1', $sha1_2);
+                              $sha256 = hash('sha256', $word);
+                              $sha384 = hash('sha384', $word);
+                              $sha512 = hash('sha512', $word);
+                              $ripemd160 = hash('ripemd160', $word);
+                              $md5_sha1 = md5(sha1($word));
+                              $sha1_md5 = sha1(md5($word));
+                              switch($type) {
+                                  case'md5':
+                                      $this->send_message($md5);
+                                      break;
+                                  //--
+                                  case'md52':
+                                      $this->send_message($md5_2);
+                                      break;
+                                  //--
+                                  case'md53':
+                                      $this->send_message($md5_3);
+                                      break;
+                                  //--
+                                  case'md54':
+                                      $this->send_message($md5_4);
+                                      break;
+                                  //--
+                                  case'md55':
+                                      $this->send_message($md5_5);
+                                      break;
+                                  //--
+                                  case'sha1':
+                                      $this->send_message($sha1);
+                                      break;
+                                  //--
+                                  case'sha12':
+                                      $this->send_message($sha1_2);
+                                      break;
+                                  //--
+                                  case'sha13':
+                                      $this->send_message($sha1_3);
+                                      break;
+                                  //--
+                                  case'sha256':
+                                      $this->send_message($sha256);
+                                      break;
+                                  //--
+                                  case'sha384':
+                                      $this->send_message($sha384);
+                                      break;
+                                  //--
+                                  case'sha512':
+                                      $this->send_message($sha512);
+                                      break;
+                                  //--
+                                  case'ripe':
+                                      $this->send_message($ripemd160);
+                                      break;
+                                  //--
+                                  case'md5sha':
+                                      $this->send_message($md5_sha1);
+                                      break;
+                                  //--
+                                  case'shamd5':
+                                      $this->send_message($sha1_md5);
+                                      break;
+                                  //--
+                                  case'all':
+                                      $this->send_message("Sent hashes to your pm feed in, to mitigate spam!");
+                                      $this->who_is();
+                                      $person = $GLOBALS['user'];
+                                      if($this->filter_text($word) == true) {
+                                          $this->insta_ban();
+                                          break;
+                                      }
+                                      $this->send_data('PRIVMSG '.$person." :Hash values for: ".$word);
+                                      $this->send_data('PRIVMSG '.$person." :MD5: ".$md5);
+                                      $this->send_data('PRIVMSG '.$person." :MD5x2: ".$md5_2);
+                                      $this->send_data('PRIVMSG '.$person." :MD5x3: ".$md5_3);
+                                      $this->send_data('PRIVMSG '.$person." :MD5x4: ".$md5_4);
+                                      $this->send_data('PRIVMSG '.$person." :MD5x5: ".$md5_5);
+                                      $this->send_data('PRIVMSG '.$person." :SHA1: ".$sha1);
+                                      $this->send_data('PRIVMSG '.$person." :SHA1x2: ".$sha1_2);
+                                      $this->send_data('PRIVMSG '.$person." :SHA1x3: ".$sha1_3);
+                                      $this->send_data('PRIVMSG '.$person." :SHA256: ".$sha256);
+                                      $this->send_data('PRIVMSG '.$person." :SHA384: ".$sha384);
+                                      $this->send_data('PRIVMSG '.$person." :SHA512: ".$sha512);
+                                      $this->send_data('PRIVMSG '.$person." :RIPEMD160: ".$ripemd160);
+                                      $this->send_data('PRIVMSG '.$person." :MD5(SHA1): ".$md5.$md5_sha1);
+                                      $this->send_data('PRIVMSG '.$person." :SHA1(MD5): ".$sha1_md5);
+                                      break;
                               }
                               break;
-                      }
-                      break;
-                    /*
-                                        $nick
-                            Will change the nickname of the bot
-                            check if user running the command is admin
-                            if so, run the command; otherwise, do not.
-                     */
 
-			    case ':$nick':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    $nick = $this->ex[4]; // storing the specified nick
-				    if($this->is_admin() == true) { // if the user is the admin
-				        $this->send_data('NICK', $nick); // change the nick
-				    }
-				    else { // if the user is not the admin
-				        $this->send_message("Only Ninjex and mods can use this command!");
-				    }
-				    break;
+                          //-----------------------------------------------------------------------------------------------------------------
 
-             //------------------------------------------------------------------------------------------------------------------
-
-                  case ':$lulz':
-                      if($this->is_banned() == true) { // if the user is banned
-                          break;
-                      }
-                      $namefile = @fopen("game/names.txt", "r");
-                      $nametitle = @fopen("game/nametitle.txt", "r");
-                      $verbsfile = @fopen("game/verbs.txt", "r");
-
-                      if($namefile) {
-                          $names = explode("\n", rtrim(fread($namefile, filesize("game/names.txt"))));
-                      }
-                      if($nametitle) {
-                          $titles = explode("\n", rtrim(fread($nametitle, filesize("game/nametitle.txt"))));
-                      }
-                      if($verbsfile) {
-                          $verbs = explode("\n", rtrim(fread($verbsfile, filesize("game/verbs.txt"))));
-                      }
-                      shuffle($names);
-                      shuffle($titles);
-                      shuffle($verbs);
-                      $this->send_message($names[0]." ".$titles[0]." ".$verbs[0]." ".$names[1]." ".$titles[1]."\n");
-                      break;
-
-             //------------------------------------------------------------------------------------------------------------------
-
-                    case ':$joke':
-                        if($this->is_banned() == true) { // if the user is banned
-                            break;
-                        }
-                        $input = NULL;
-                        for($i=4; $i <= (count($this->ex)); $i++) { // grabbing the message
-                            $input .= $this->ex[$i]." "; // storing the message in input
-                        }
-                        $input = trim($input);
-                        $insultfile = @fopen("insults.txt", "r");
-                        $rand = rand(0,47);
-                        if($insultfile) {
-                            $insult = explode("\n", rtrim(fread($insultfile, filesize("insults.txt"))));
-                        }
-                        shuffle($insult);
-                        $this->send_message($input.", ".$insult[$rand]);
-                        break;
-
-            //-------------------------------------------------------------------------------------------------------------------
-
-                  /*
-                                           $say
-                           Will force the bot to repeat text following ex[3]
-                   */
-
-                case ':$say':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    $start = 4; // getting a initializer to count from
-                    $message = $this->get_message($start); // grabbing our message
-                    $this->send_message($message); // echoing the message
-                    break;
-
-             //-------------------------------------------------------------------------------------------------------------------
-
-                  /*
-                                            $ban
-                            Add a user to the ban file (banned_users.txt)
-                                Check if user running command is Admin
-                                If the user is admin allow execution
-                                otherwise, do not and print error
-                   */
-
-                case ':$ban':
-                    if($this->is_banned() == true) { // if the user is already banned
-                        break;
-                    }
-                    if($this->is_admin() != true) { // if the user is not the admin
-                        $this->send_message('Only Ninjex may use the $ban command!');
-                        break;
-                    }
-                    else{ // if the user is not banned
-                        $this->ban_user(); // calling ban function (takes ex[4] by default)
-                        $this->send_message("Successfully banned the user!");
-                    }
-                      break;
-
-             //-------------------------------------------------------------------------------------------------------------------
-
-                  /*
-                                                $mod
-                            Add a user to the moderator file list (mods.txt)
-                                Check if user running command is Admin
-                                If the user is admin, allow execution
-                                Otherwise, do not, and print error
-                   */
-
-			    case ':$mod':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    $user = $this->ex[4]; // grabbing the user from input
-                    if($this->is_admin() != true) { // if the user is not the admin
-                        $this->send_message('Only Ninjex may use the $mod command!');
-                        break;
-                    }
-                    elseif($this->check_mod($user) == true) { // if the user is already a mod
-                        $this->send_message("The user is already a moderator!");
-                        break;
-                    }
-                    else { // if the user is not a mod
-                        $person = $this->ex[4]; // getting the user from the command
-				        $this->make_mod(); // using make_mod() function to mod the user
-                        $this->send_message("Successfully added the user to the mod list!");
-                    }
-                    break;
-
-            //-------------------------------------------------------------------------------------------------------------------
-
-                  /*
-                                                $rmod
-                              Remove the given user from the mod file (mods.txt)
-                                Check if the user running the command is Admin
-                                If the user is Admin, run the command
-                                Otherwise do not, and print error
-                   */
-
-                case ':$rmod':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    if($this->is_admin() != true) { // if the user is not the admin
-                        $this->send_message("Only Ninjex may use this command!");
-                    }
-                    else {
-                        $person = $this->ex[4]; // grabbing the specified user
-                        if(strlen($person) < 1) { // if the specified user is null or no user given
-                            $this->send_message("You did not specify a user to revoke mod from, breaking for your convenience!");
-                            break;
-                        }
-                        else {
-                            exec("sed '/'$person'/d' mods.txt >> tempt.txt"); // using sed to remove the mod from the file
-                            exec("mv tempt.txt mods.txt");
-                            exec("rm tempt.txt");
-                            $this->send_message("Successfully revoked privileges from the desired mod!");
-                        }
-                    }
-                      break;
-
-            //-------------------------------------------------------------------------------------------------------------------
-
-                  case ':$rmban':
-                      $person = $this->ex[4];
-                      if($this->is_admin() != true) {
-                          $this->send_message("Only the administrator can use this command!");
-                      }
-                      else {
-                          if(strlen($person) < 1) {
-                              $this->send_message("You did not specify a user to unban, breaking for your convenience!");
+                          case ':$len':
+                              $word = $this->get_message();
+                              $length = strlen($word);
+                              $this->send_message("The input is: ".$length." characters in length!");
                               break;
-                          }
-                          else {
-                              exec("sed '/'$person'/d' baned_users.txt >> temp.txt");
-                              exec("mv temp.txt baned_users.txt");
-                              exec("rm temp.txt");
-                              $this->send_message("Successfully removed the ban from the specified host!");
-                          }
-                      }
-                      break;
-            //-------------------------------------------------------------------------------------------------------------------
 
-                  /*
-                                                $who
-                                Display the user's short name and extended name to them
-                   */
+                          //----------------------------------------------------------------------------------------------------------------
 
-                case ':$who':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    $this->who_is(); // calling the who_is function
-                    if($this->is_mod() xor $this->is_admin() == false){ // if the user is not a mod or an admin
-				        $this->send_message('You are a standard user with the name of: ' . $GLOBALS['user'] . ' and the extended name of: ' . $GLOBALS['fullUser']);
-                    }
-                    elseif($this->is_mod() xor $this->is_admin() == true) { // if the user is a mod or admin
-                        $this->send_message('You are a privileged user with the name of: ' . $GLOBALS['user'] . ' and the extended name of: ' . $GLOBALS['fullUser']);
-                    }
-				break;
+                          case ':$b2hex':
+                              $word = $this->get_message();
+                              $hex = bin2hex($word);
+                              $this->send_message($word." converted to hex is: 0x".$hex);
+                              break;
 
-            //-------------------------------------------------------------------------------------------------------------------
+                          //-----------------------------------------------------------------------------------------------------------------
 
-                  case ':$mod?':
-                      if($this->is_banned() == true) { // if the user is banned
-                          break;
-                      }
-                      $user = $this->ex[4]; // grabbing the user
-                      if($this->check_mod($user) == true) { // if the user is a moderator
-                          $this->send_message("The user is a moderator!");
-                      }
-                      else { // if the user is not a moderator
-                          $this->send_message("The user is not a moderator!");
-                      }
-                  break;
+                          case ':$h2bin':
+                              $binary = rtrim($this->ex[4]);
+                              $binary = pack("H*" , $binary);
+                              $this->send_message("The value is: ".$binary);
+                              break;
+                          //-----------------------------------------------------------------------------------------------------------------
 
-            //-------------------------------------------------------------------------------------------------------------------
+                          case ':$youtube':
+                              $site = $this->ex[4];
+                              $content = file_get_contents($site);
 
-                  /*
-                                                $join
-                                Force the bot to join a given channel (ex[4])
-                                Check if the user running command is Admin
-                                If the user is Admin execute the command
-                                Otherwise, do not and print out an error
-                   */
+                              $search = '<meta name="twitter:title" content="';
+                              $searchb = '<meta name="twitter:description" content="';
 
-                case ':$join':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    if($this->is_admin() == true) { // if the user is the admin
-                        $this->send_message("Joining the channel...");
-                        $this->join_channel($this->ex[4]);
-				    }
-                    else { // if the user is not the admin
-                        $this->send_message('Sorry, only Ninjex can use the $join command!');
-                    }
-                break;
+                              $pieces = explode($search, $content);
+                              $piece = explode ('">', $pieces[1]);
 
-            //---------------------------------------------------------------------------------------------------------------------
+                              $piecesb = explode($searchb, $content);
+                              $pieceb = explode('">', $piecesb[1]);
 
-                  case ':$leave':
-                      $channel_to_leave = $this->ex[4];
-                      if($this->is_admin() != true) {
-                          $this->send_message("You are not authorized to use this command!");
-                          break;
-                      }
-                      else {
-                          $this->send_data('PART', $channel_to_leave);
-                      }
-                      break;
+                              $this->send_message("Youtube Title: ".htmlspecialchars_decode($piece[0])); //."   Description: [[".htmlspecialchars_decode($pieceb[0])."]]\n");
+                              break;
+
+                          //-------------------------------------------------------------------------------------------------------------------
+
+                          case ':$addplayer':
+                              $this->con_mysql();
+                              $health = 100; // health
+                              $healthTotal = 100;
+                              $speed = 100; //speed
+                              $attack = 100; // attack
+                              $defense = 100;// defense
+                              $name = $this->ex[4]; //name
+                              $level = 1; // level
+                              $class = $this->ex[5]; //level
+                              mysql_query("INSERT INTO players (health, healthTotal, speed, attack, defense, name, level, class) VALUES ('".$health."', '".$healthtotal."', ".$speed."', '".$attack."', '".$defense."', '".$name."', '".$level."', '".$class."')");
+                              $this->send_message("Query sent, check to make sure it worked...");
+                              break;
 
 
-            //---------------------------------------------------------------------------------------------------------------------
+                          //----------------------------------------------------------------------------------------------------------------
 
-                  /*
-                                                $gtfo
-                                Force the bot client to quit out from IRC and exit
-                                Check if the user running the command is Admin
-                                If the user is Admin, execute the command
-                                Otherwise, do not and display an error
-                   */
+                          case ':$register':
+                              $this->who_is();
+                              $this->con_mysql();
+                              $user = rtrim($GLOBALS['user']);
+                              $pass = $this->ex[4];
+                              $salt = "0osdf87ijflkj";
+                              $pass = $salt.$pass;
+                              $pass = md5(rtrim($pass));
+                              mysql_query("INSERT INTO ninja_login (login_name, login_pass) VALUES ('".$user."', '".$pass."')");
+                              $this->send_message("You have successfully registered an account!");
+                              break;
 
-                case ':$gtfo':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    if($this->is_admin() != true) { // if the user is not the admin
-                        $this->send_message('Sorry, only Ninjex can use the $gtfo command!');
-                    }
-				    else { // if the user is the admin
-                        $this->send_data('QUIT', 'Yolo');
-                        exit();
-				    }
-				    break;
+                          //----------------------------------------------------------------------------------------------------------------
 
-            //----------------------------------------------------------------------------------------------------------------------
+                          case ':$account': // change to $account with the switch case of login, logout, status
+                              $choice = $this->ex[4];
+                              $this->con_mysql();
+                              $this->who_is();
+                              $user = $GLOBALS['user'];
+                              switch($choice) {
+                                  case 'info':
+                                      if($this->check_login() != true) {
+                                          $this->send_message("You must first be logged in to get the account details!");
+                                      }
+                                      else {
+                                          $getinfo = mysql_query("SELECT * FROM players WHERE name='".$user."'");
+                                          $getinventory = mysql_query("SELECT * FROM inventory WHERE name='".$user."'");
+                                          while($info = mysql_fetch_array($getinfo)) {
+                                              $health = $info['health'];
+                                              $speed = $info['speed'];
+                                              $attack = $info['attack'];
+                                              $defense = $info['defense'];
+                                              $name = $info['name'];
+                                              $level = $info['level'];
+                                              $class = $info['class'];
+                                              $exp = $info['exp'];
+                                              $healthtotal = $info['healthTotal'];
+                                              $this->send_message("General Stats >> Health: ".$health." Max Health: ".$healthtotal.", Speed: ".$speed.", Attack: ".$attack.", Defense: ".$defense.", Name: ".$name.", Level: ".$level.", Class: ".$class.", Exp: ".$exp);
+                                          }
+                                          while($inventory = mysql_fetch_array($getinventory)) {
+                                              $weapon = $inventory['weapon'];
+                                              $healthpots = $inventory['healthpot'];
+                                              $poisonpots = $inventory['poisonpot'];
+                                              $gold = $inventory['gold'];
+                                              $armor = $inventory['armor'];
+                                              $helmet = $inventory['helmet'];
+                                              $leggings = $inventory['leggings'];
+                                              $this->send_message("Equiped With >> Weapon: ".$weapon.", Armor: ".$armor.", Helmet: ".$helmet.", Leggings: ".$leggings.", Gold: ".$gold.", Health Potions: ".$healthpots.", Poison Potions: ".$poisonpots);
+                                          }
+                                      }
+                                      break;
+                                  case 'status':
+                                      if($this->check_login() == true) {
+                                          $this->send_message("You are currently logged in!");
+                                      }
+                                      else {
+                                          $this->send_message("You are not logged into an account!");
+                                      }
+                                      break;
+                                  case'login':
+                                      $pass = $this->ex[5]; // if the user placed a password here
+                                      //$this->check_login($pass);
+                                      $salt = "0osdf87ijflkj";
+                                      $pass = rtrim(md5($salt.$pass));
+                                      $value = "True";
+                                      $getpass = mysql_query("SELECT login_pass FROM ninja_login WHERE login_name='".$user."'");
+                                      while($row = mysql_fetch_array($getpass)) {
+                                          if($row['login_pass'] == $pass) {
+                                              mysql_query("UPDATE ninja_login SET logged_in='".$value."' WHERE login_name='".$user."'"); // Query to set logged_in to "True"
+                                              $this->send_message("You have successfully logged in!");
+                                              break;
+                                          }
+                                          else{
+                                              $this->send_message("ERROR: The password did not match for your username!");
+                                              break;
+                                          }
+                                      }
+                                      break;
+                                  case 'logout':
+                                      if($this->check_login() == false) {
+                                          $this->send_message("You can not log out of an account you are not logged into!");
+                                          break;
+                                      }
+                                      $query = mysql_query("SELECT logged_in FROM ninja_login WHERE login_name='".$user."'");
+                                      $false = "False";
+                                      while($row = mysql_fetch_array($query)) {
+                                          if($row['logged_in'] == "True") {
+                                              mysql_query("UPDATE ninja_login SET logged_in='".$false."'");
+                                              $this->send_message("You have successfully logged out!");
+                                              break;
+                                          }
+                                      }
+                              }
+                              break;
+
+                          //----------------------------------------------------------------------------------------------------------------
+
+                          case ':$getplayer':
+                              $this->con_mysql();
+                              $user = $this->ex[4];
+                              $query = mysql_query("SELECT * FROM players WHERE name='".$user."'");
+                              while($row = mysql_fetch_array($query)) {
+                                  $this->send_message("The user is: ".$row['name']." and has ".$row['health']." health!");
+                                  /* foreach($row as $message) {
+                                       $this->send_message($message);
+                                   }*/
+                              }
+                              break;
+                          //-----------------------------------------------------------------------------------------------------------------
+
+                          case ':$ninja':
+                              $this->con_mysql();
+                              // if($this->is_admin() != true) {
+                              //   $this->send_message("Protecting this function from the l337 kids around the block!");
+                              //  }
+                              if($this->is_admin() xor $this->is_mod() != true) {
+                                  $this->send_message("You are not authorized to use this command, sorry!");
+                                  break;
+                              }
+                              switch($this->ex[4]) {
+                                  case 'start':
+
+                                      break;
+
+                                  case 'attack':
+                                      $this->con_mysql(); // connecting to ninja db
+                                      $user = $this->ex[5]; // grabbing the user to attack
+                                      if($this->check_login() == "True") { // see if user is logged in
+                                          $attacked = $this->attack_user($user); // send attack request
+                                          if($attacked == "INVALID") {
+                                              $this->send_message("The user you are trying to attack is an invalid account!");
+                                              break;
+                                          }
+                                          $chance = rand(1,2); // 50% chance to get loot
+                                          if($chance == 1) {
+                                              $random = rand(1,6); // random is to be used to select a sword via the sword_id
+                                              $query = mysql_query("SELECT type FROM swords WHERE sword_id='".$random."'");
+                                              $this->send_message("You found a ".$query);
+                                              /*while($row = mysql_fetch_array($query)) {
+                                                  $que = "SELECT "
+                                                  $this->send_message("You have found a ".$row["$random"]);
+                                              }*/
+                                          }
+                                          else {
+                                              $this->send_message("No loot was found!");
+                                          }
+                                      }
+                                      else {
+                                          $this->send_message("You must be logged in to attack another player!");
+                                      }
+                                      break;
+                              }
+                              break;
+                          /*
+                                              $nick
+                                  Will change the nickname of the bot
+                                  check if user running the command is admin
+                                  if so, run the command; otherwise, do not.
+                           */
+
+                          case ':$nick':
+                              $nick = $this->ex[4]; // storing the specified nick
+                              if($this->is_admin() == true) { // if the user is the admin
+                                  $this->send_data('NICK', $nick); // change the nick
+                              }
+                              else { // if the user is not the admin
+                                  $this->send_message("Only Ninjex and mods can use this command!");
+                              }
+                              break;
+
+                          //------------------------------------------------------------------------------------------------------------------
+
+                          case ':$lulz':
+                              $namefile = @fopen("game/names.txt", "r");
+                              $nametitle = @fopen("game/nametitle.txt", "r");
+                              $verbsfile = @fopen("game/verbs.txt", "r");
+
+                              if($namefile) {
+                                  $names = explode("\n", rtrim(fread($namefile, filesize("game/names.txt"))));
+                              }
+                              if($nametitle) {
+                                  $titles = explode("\n", rtrim(fread($nametitle, filesize("game/nametitle.txt"))));
+                              }
+                              if($verbsfile) {
+                                  $verbs = explode("\n", rtrim(fread($verbsfile, filesize("game/verbs.txt"))));
+                              }
+                              shuffle($names);
+                              shuffle($titles);
+                              shuffle($verbs);
+                              $this->send_message($names[0]." ".$titles[0]." ".$verbs[0]." ".$names[1]." ".$titles[1]."\n");
+                              break;
+
+                          //------------------------------------------------------------------------------------------------------------------
+
+                          case ':$joke':
+                              $input = NULL;
+                              for($i=4; $i <= (count($this->ex)); $i++) { // grabbing the message
+                                  $input .= $this->ex[$i]." "; // storing the message in input
+                              }
+                              $input = trim($input);
+                              $insultfile = @fopen("insults.txt", "r");
+                              $rand = rand(0,47);
+                              if($insultfile) {
+                                  $insult = explode("\n", rtrim(fread($insultfile, filesize("insults.txt"))));
+                              }
+                              shuffle($insult);
+                              $this->send_message($input.", ".$insult[$rand]);
+                              break;
+
+                          //-------------------------------------------------------------------------------------------------------------------
+
+                          /*
+                                                   $say
+                                   Will force the bot to repeat text following ex[3]
+                           */
+
+                          case ':$say':
+                              $start = 4; // getting a initializer to count from
+                              $message = $this->get_message($start); // grabbing our message
+                              $this->send_message($message); // echoing the message
+                              break;
+
+                          //-------------------------------------------------------------------------------------------------------------------
+
+                          /*
+                                                    $ban
+                                    Add a user to the ban file (banned_users.txt)
+                                        Check if user running command is Admin
+                                        If the user is admin allow execution
+                                        otherwise, do not and print error
+                           */
+
+                          case ':$ban':
+                              if($this->is_admin() != true) { // if the user is not the admin
+                                  $this->send_message('Only Ninjex may use the $ban command!');
+                                  break;
+                              }
+                              else{ // if the user is not banned
+                                  $this->ban_user(); // calling ban function (takes ex[4] by default)
+                                  $this->send_message("Successfully banned the user!");
+                              }
+                              break;
+
+                          //-------------------------------------------------------------------------------------------------------------------
+
+                          /*
+                                                        $mod
+                                    Add a user to the moderator file list (mods.txt)
+                                        Check if user running command is Admin
+                                        If the user is admin, allow execution
+                                        Otherwise, do not, and print error
+                           */
+
+                          case ':$mod':
+                              $user = $this->ex[4]; // grabbing the user from input
+                              if($this->is_admin() != true) { // if the user is not the admin
+                                  $this->send_message('Only Ninjex may use the $mod command!');
+                                  break;
+                              }
+                              elseif($this->check_mod($user) == true) { // if the user is already a mod
+                                  $this->send_message("The user is already a moderator!");
+                                  break;
+                              }
+                              else { // if the user is not a mod
+                                  $person = $this->ex[4]; // getting the user from the command
+                                  $this->make_mod(); // using make_mod() function to mod the user
+                                  $this->send_message("Successfully added the user to the mod list!");
+                              }
+                              break;
+
+                          //-------------------------------------------------------------------------------------------------------------------
+
+                          /*
+                                                        $rmod
+                                      Remove the given user from the mod file (mods.txt)
+                                        Check if the user running the command is Admin
+                                        If the user is Admin, run the command
+                                        Otherwise do not, and print error
+                           */
+
+                          case ':$rmod':
+                              if($this->is_admin() != true) { // if the user is not the admin
+                                  $this->send_message("Only Ninjex may use this command!");
+                              }
+                              else {
+                                  $person = $this->ex[4]; // grabbing the specified user
+                                  if(strlen($person) < 1) { // if the specified user is null or no user given
+                                      $this->send_message("You did not specify a user to revoke mod from, breaking for your convenience!");
+                                      break;
+                                  }
+                                  else {
+                                      exec("sed '/'$person'/d' mods.txt >> tempt.txt"); // using sed to remove the mod from the file
+                                      exec("mv tempt.txt mods.txt");
+                                      exec("rm tempt.txt");
+                                      $this->send_message("Successfully revoked privileges from the desired mod!");
+                                  }
+                              }
+                              break;
+
+                          //-------------------------------------------------------------------------------------------------------------------
+
+                          case ':$rmban':
+                              $person = $this->ex[4];
+                              if($this->is_admin() != true) {
+                                  $this->send_message("Only the administrator can use this command!");
+                              }
+                              else {
+                                  if(strlen($person) < 1) {
+                                      $this->send_message("You did not specify a user to unban, breaking for your convenience!");
+                                      break;
+                                  }
+                                  else {
+                                      exec("sed '/'$person'/d' baned_users.txt >> temp.txt");
+                                      exec("mv temp.txt baned_users.txt");
+                                      exec("rm temp.txt");
+                                      $this->send_message("Successfully removed the ban from the specified host!");
+                                  }
+                              }
+                              break;
+                          //-------------------------------------------------------------------------------------------------------------------
+
+                          /*
+                                                        $who
+                                        Display the user's short name and extended name to them
+                           */
+
+                          case ':$who':
+                              $this->who_is(); // calling the who_is function
+                              if($this->is_mod() xor $this->is_admin() == false){ // if the user is not a mod or an admin
+                                  $this->send_message('You are a standard user with the name of: ' . $GLOBALS['user'] . ' and the extended name of: ' . $GLOBALS['fullUser']);
+                              }
+                              elseif($this->is_mod() xor $this->is_admin() == true) { // if the user is a mod or admin
+                                  $this->send_message('You are a privileged user with the name of: ' . $GLOBALS['user'] . ' and the extended name of: ' . $GLOBALS['fullUser']);
+                              }
+                              break;
+
+                          //-------------------------------------------------------------------------------------------------------------------
+
+                          case ':$mod?':
+                              $user = $this->ex[4]; // grabbing the user
+                              if($this->check_mod($user) == true) { // if the user is a moderator
+                                  $this->send_message("The user is a moderator!");
+                              }
+                              else { // if the user is not a moderator
+                                  $this->send_message("The user is not a moderator!");
+                              }
+                              break;
+
+                          //-------------------------------------------------------------------------------------------------------------------
+
+                          /*
+                                                        $join
+                                        Force the bot to join a given channel (ex[4])
+                                        Check if the user running command is Admin
+                                        If the user is Admin execute the command
+                                        Otherwise, do not and print out an error
+                           */
+
+                          case ':$join':
+                              if($this->is_admin() == true) { // if the user is the admin
+                                  $this->send_message("Joining the channel...");
+                                  $this->join_channel($this->ex[4]);
+                              }
+                              else { // if the user is not the admin
+                                  $this->send_message('Sorry, only Ninjex can use the $join command!');
+                              }
+                              break;
+
+                          //---------------------------------------------------------------------------------------------------------------------
+
+                          case ':$leave':
+                              $channel_to_leave = $this->ex[4];
+                              if($this->is_admin() != true) {
+                                  $this->send_message("You are not authorized to use this command!");
+                                  break;
+                              }
+                              else {
+                                  $this->send_data('PART', $channel_to_leave);
+                              }
+                              break;
 
 
-                  /*
-                                                $rand
-                             The bot will display a random number from the given input
-                                grab a min number ex[4] and a max number ex[5]
-                                use rand_num($min, $max) to get a random number
-                                echo the random number back to the user
-                   */
+                          //---------------------------------------------------------------------------------------------------------------------
 
-			    case ':$rand':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    $min = $this->ex[4]; // grabbing minimum number
-                    $max = $this->ex[5]; // grabbing maximum number
-                    if($min > 20000000 ||  $min < -20000000|| $max > 20000000 || $max < -20000000) { // if the numbers are too high or too low
-                        $this->send_message('The number you entered is either too large or too small!');
-                        $this->send_message('The number can not exceed 20000000 nor can it be lower than -20000000');
-                    }
-                    elseif(is_numeric($max) != true || is_numeric($min) != true) { // if the specified input are not numbers
-                        $this->send_message('You must enter a number, not a character value!');
-                    }
-                    else { // if everything looks good
-                        $this->random_num($min, $max); // call our random_num function
-                    }
-                    break;
+                          /*
+                                                        $gtfo
+                                        Force the bot client to quit out from IRC and exit
+                                        Check if the user running the command is Admin
+                                        If the user is Admin, execute the command
+                                        Otherwise, do not and display an error
+                           */
 
-            //-----------------------------------------------------------------------------------------------------------------------
+                          case ':$gtfo':
+                              if($this->is_admin() != true) { // if the user is not the admin
+                                  $this->send_message('Sorry, only Ninjex can use the $gtfo command!');
+                              }
+                              else { // if the user is the admin
+                                  $this->send_data('QUIT', 'Yolo');
+                                  exit();
+                              }
+                              break;
 
-                  /*
-                                         $eunix
-                            Hash a string using a salt with unix crypt
-                                grab a salt value with ex[4]
-                                grab a string to encrypt ex[5]+
-                                  remove whitespace and crypt
-                                    crypt($string,$sallt);
-                                     echo the data back
-                   */
-
-			   case ':$eunix':
-                   if($this->is_banned() == true) { // if the user is banned
-                       break;
-                   }
-				   $salt = $this->ex[4]; // grabbing the salt
-				   for($i=5; $i <= (count($this->ex)); $i++) { // grabbing the string to hash
-                       $string .= $this->ex[$i]." "; // still grabbing the string
-                   }
-                   $string = rtrim($string); // removing trailing whitespace from the string
-			       $crypt = crypt($string,$salt); // using crypt function to encrypt our string with the given salt
-	    		   $this->send_message('The encrypted unix value of: ' . $string . ' with salt: ' . substr($salt,0,2) . ' is: ' . $crypt);
-				   break;
-
-            //-----------------------------------------------------------------------------------------------------------------------
+                          //----------------------------------------------------------------------------------------------------------------------
 
 
+                          /*
+                                                        $rand
+                                     The bot will display a random number from the given input
+                                        grab a min number ex[4] and a max number ex[5]
+                                        use rand_num($min, $max) to get a random number
+                                        echo the random number back to the user
+                           */
 
-            //-----------------------------------------------------------------------------------------------------------------------
+                          case ':$rand':
+                              $min = $this->ex[4]; // grabbing minimum number
+                              $max = $this->ex[5]; // grabbing maximum number
+                              if($min > 20000000 ||  $min < -20000000|| $max > 20000000 || $max < -20000000) { // if the numbers are too high or too low
+                                  $this->send_message('The number you entered is either too large or too small!');
+                                  $this->send_message('The number can not exceed 20000000 nor can it be lower than -20000000');
+                              }
+                              elseif(is_numeric($max) != true || is_numeric($min) != true) { // if the specified input are not numbers
+                                  $this->send_message('You must enter a number, not a character value!');
+                              }
+                              else { // if everything looks good
+                                  $this->random_num($min, $max); // call our random_num function
+                              }
+                              break;
 
-                  /*
-                                    $rmfile
-                            Remove the hash file (md5hashes.txt)
-                                This file is used to decrypt multiple hashes at once
-                                Check if the user running the command is the Admin
-                                If the user is in fact the Admin, the command executes
-                                Use exec to execute the command to remove the file
-                   */
+                          //-----------------------------------------------------------------------------------------------------------------------
 
-              case ':$rmfile':
-                  if($this->is_banned() == true) { // if the user is banned
-                      break;
-                  }
-                  if($this->is_admin() xor $this->is_mod() != true) { // if the user is not a mod or admin
-                      $this->send_message("You are not authorized for this command.");
-                  }
-                  else { // if the user is a mod or admin
-                    exec("rm md5hashes.txt"); // remove the md5hash file
-                    $this->send_message("The md5 hash file was removed...");
-                  }
-                  break;
+                          /*
+                                                 $eunix
+                                    Hash a string using a salt with unix crypt
+                                        grab a salt value with ex[4]
+                                        grab a string to encrypt ex[5]+
+                                          remove whitespace and crypt
+                                            crypt($string,$sallt);
+                                             echo the data back
+                           */
 
-            //-----------------------------------------------------------------------------------------------------------------------
+                          case ':$eunix':
+                              $salt = $this->ex[4]; // grabbing the salt
+                              for($i=5; $i <= (count($this->ex)); $i++) { // grabbing the string to hash
+                                  $string .= $this->ex[$i]." "; // still grabbing the string
+                              }
+                              $string = rtrim($string); // removing trailing whitespace from the string
+                              $crypt = crypt($string,$salt); // using crypt function to encrypt our string with the given salt
+                              $this->send_message('The encrypted unix value of: ' . $string . ' with salt: ' . substr($salt,0,2) . ' is: ' . $crypt);
+                              break;
 
-              case ':$rmtemp':
-                  if($this->is_banned() == true) { // if the user is banned
-                      break;
-                  }
-                  if($this->is_admin() xor $this->is_mod() != true) { // if the user is not a mod or admin
-                      $this->send_message("You are not authorized for this command.");
-                  }
-                  else { // if the user is a mod or admin
-                      exec("rm tempt.txt"); // remove the tempt file
-                      $this->send_message("The temporary file was removed...");
-                  }
-                      break;
+                          //-----------------------------------------------------------------------------------------------------------------------
 
-            //--------------------------------------------------------------------------------------------------------------------------
-                  /*
-                                    $emd5file
-                            Check if the user executing the command is Admin or mod
-                            Take a list of words (ex[4]++) and convert each to md5
-                            Store the value of each hash inside of md5hashes.txt
-                            We can use $dmd5file to decrypt all the hashes at on time
-                   */
 
-              case ':$emd5file':
-                  if($this->is_banned() == true) { // if the user is banned
-                      break;
-                  }
-                  if($this->is_admin() xor $this->is_mod() != true ) { // if the user is not a mod or admin
-                      $this->send_message("You are not authorized to use this command.");
-                  }
-                  else { // if the user is a mod or admin
-                  $md5file = fopen("md5hashes.txt", "a+"); // opening the md5hash file
-                  for($i=4; $i <= (count($this->ex)); $i++) { // grabbing the string to hash into md5
-                      if($i >= 14) {
-                          $this->send_message("You can only insert 10 words to be hashed and inserted into the file, only 10 hashes entered!");
-                          break;
-                      }
-                      $word = rtrim($this->ex[$i]); // removing trailing whitespace from the word
-                      if($this->filter_text($word) == true) {
-                          $this->insta_ban();
-                          break;
-                      }
-                      $hash = md5($word); // hashing the word into md5
-                      fwrite($md5file, $hash."\n");
-                  }
-                  $this->send_message("Done writing hashes to file...");
-                  }
-                  break;
 
-            //-----------------------------------------------------------------------------------------------------------------------
+                          //-----------------------------------------------------------------------------------------------------------------------
 
-                  /*
-                                    $dmd5file
-                            Use a lookup table to find the hash values inside of md5hashes.txt
-                                You may store hashes in the file with $hashfile or $emd5file
-                                Check if the user executing the command is admin or mod
-                                Check if the word is not over 20 characters in length
-                                Echo the value for each hash if found otherwise echo nohting
-                   */
+                          /*
+                                            $rmfile
+                                    Remove the hash file (md5hashes.txt)
+                                        This file is used to decrypt multiple hashes at once
+                                        Check if the user running the command is the Admin
+                                        If the user is in fact the Admin, the command executes
+                                        Use exec to execute the command to remove the file
+                           */
 
-              case ':$md5file':
-                  if($this->is_banned() == true) { // if the user is banned
-                      break;
-                  }
-                  if($this->is_admin() xor $this->is_mod() != true){ // if the user is not a mod or admin
-                      $this->send_message("You are not authorized to use this command.");
-                  }
-                  else { // if the user is a mod or admin
-                  $this->send_message("Checking the lookup table for the hash, please check your pm feed for the discovered hashes!");
-                  $md5file = fopen("md5hashes.txt", "a+");  // opening the md5hash file - the hashes that need to be found
-                  $option = rtrim($this->ex[4]); // setting an option to use either small or big for the dictionary
-                  while(!feof($md5file)) { // while not at the end of the md5hash file
-                      $hashinmd5file = rtrim(fgets($md5file)); // get the hash on the current line of the file
-                      if(strlen($hashinmd5file) >=1 ) { // if the hash is greater than or equal to 1 in length
-                          //$starttime = time();
-                        $this->decrypt_md5($hashinmd5file, $option); // call the hash to our decrypt_md5 function
-                          //$endtime = time();
-                         // $time = $endtime-$starttime;
-                          //$this->send_message("Time elapsed in second(s): ".$time);
-                      }
-                  }
-                  }
-                  break;
-            //-----------------------------------------------------------------------------------------------------------------------
+                          case ':$rmfile':
+                              if($this->is_admin() xor $this->is_mod() != true) { // if the user is not a mod or admin
+                                  $this->send_message("You are not authorized for this command.");
+                              }
+                              else { // if the user is a mod or admin
+                                  exec("rm md5hashes.txt"); // remove the md5hash file
+                                  $this->send_message("The md5 hash file was removed...");
+                              }
+                              break;
 
-                  /*
-                                         $emd5
-                            Convert a string (ex[4]++) into md5
-                        Echo the data of the hash back into the IRC channel
-                   */
+                          //-----------------------------------------------------------------------------------------------------------------------
 
-			  case ':$emd5':
-                  if($this->is_banned() == true) { // if the user is banned
-                      break;
-                  }
-                  $plainText = $this->get_message(); // grabbing the string
-				  $plainText = rtrim($plainText); // remove trailing whitespace from our string
-				  $encString = md5($plainText); // hash our string into md5
-				  $this->send_message($plainText." hashed is: ".$encString); // echo out the md5 value
-				  break;
+                          case ':$rmtemp':
+                              if($this->is_admin() xor $this->is_mod() != true) { // if the user is not a mod or admin
+                                  $this->send_message("You are not authorized for this command.");
+                              }
+                              else { // if the user is a mod or admin
+                                  exec("rm tempt.txt"); // remove the tempt file
+                                  $this->send_message("The temporary file was removed...");
+                              }
+                              break;
 
-            //-----------------------------------------------------------------------------------------------------------------------
+                          //--------------------------------------------------------------------------------------------------------------------------
+                          /*
+                                            $emd5file
+                                    Check if the user executing the command is Admin or mod
+                                    Take a list of words (ex[4]++) and convert each to md5
+                                    Store the value of each hash inside of md5hashes.txt
+                                    We can use $dmd5file to decrypt all the hashes at on time
+                           */
 
-                  /*
-                                             $hashfile
-                        Add a list of hash values inside of md5hashes.txt to be decrypted
-                            Check if the user is Admin or mod, if so execute the command
-                            grab each of the hash values with ex[4]++
-                            use fwrite to write the hash to the file
-                   */
+                          case ':$emd5file':
+                              if($this->is_admin() xor $this->is_mod() != true ) { // if the user is not a mod or admin
+                                  $this->send_message("You are not authorized to use this command.");
+                              }
+                              else { // if the user is a mod or admin
+                                  $md5file = fopen("md5hashes.txt", "a+"); // opening the md5hash file
+                                  for($i=4; $i <= (count($this->ex)); $i++) { // grabbing the string to hash into md5
+                                      if($i >= 14) {
+                                          $this->send_message("You can only insert 10 words to be hashed and inserted into the file, only 10 hashes entered!");
+                                          break;
+                                      }
+                                      $word = rtrim($this->ex[$i]); // removing trailing whitespace from the word
+                                      if($this->filter_text($word) == true) {
+                                          $this->insta_ban();
+                                          break;
+                                      }
+                                      $hash = md5($word); // hashing the word into md5
+                                      fwrite($md5file, $hash."\n");
+                                  }
+                                  $this->send_message("Done writing hashes to file...");
+                              }
+                              break;
 
-               case ':$hashfile':
-                   if($this->is_banned() == true) { // if the user is banned
-                       break;
-                   }
-                   if($this->is_admin() xor $this->is_mod() != true) { // if the user is not a mod or admin
-                       $this->send_message("You do not have access to this command, sorry...");
-                   }
-                   else { // if the user is a mod or admin
-                       $md5file = fopen("md5hashes.txt", "a+"); // opening our md5hash file
-                       for($i=4; $i <= (count($this->ex)); $i++) { // grabbing our string
-                           $word = rtrim($this->ex[$i]); // removing whitespace from string
-                           if($i >= 14) {
-                               $this->send_message("You can only insert 10 hashes at a time, only 10 hashes entered!");
-                               break;
-                           }
-                           fwrite($md5file, $word."\n"); // writing the word to our file
-                       }
-                   $this->send_message("Done writing hashes to file...");
-                   }
-                   break;
+                          //-----------------------------------------------------------------------------------------------------------------------
 
-            //-----------------------------------------------------------------------------------------------------------------------
+                          /*
+                                            $dmd5file
+                                    Use a lookup table to find the hash values inside of md5hashes.txt
+                                        You may store hashes in the file with $hashfile or $emd5file
+                                        Check if the user executing the command is admin or mod
+                                        Check if the word is not over 20 characters in length
+                                        Echo the value for each hash if found otherwise echo nohting
+                           */
 
-                  /*
-                                                $md5
-                         Check a lookup table for the given md5 hash value and echo's the value
-                            grab the hash to lookup with ex[4]
-                            use grep to search the file for the hash value
-                            return the value of grep into tempt.txt
-                            echo the values of tempt.txt into IRC if the length is >= 1
-                            remove the tempt.txt file using a exec command
-                   */
+                          case ':$md5file':
+                              if($this->is_admin() xor $this->is_mod() != true){ // if the user is not a mod or admin
+                                  $this->send_message("You are not authorized to use this command.");
+                              }
+                              else { // if the user is a mod or admin
+                                  $this->send_message("Checking the lookup table for the hash, please check your pm feed for the discovered hashes!");
+                                  $md5file = fopen("md5hashes.txt", "a+");  // opening the md5hash file - the hashes that need to be found
+                                  $option = rtrim($this->ex[4]); // setting an option to use either small or big for the dictionary
+                                  while(!feof($md5file)) { // while not at the end of the md5hash file
+                                      $hashinmd5file = rtrim(fgets($md5file)); // get the hash on the current line of the file
+                                      if(strlen($hashinmd5file) >=1 ) { // if the hash is greater than or equal to 1 in length
+                                          //$starttime = time();
+                                          $this->decrypt_md5($hashinmd5file, $option); // call the hash to our decrypt_md5 function
+                                          //$endtime = time();
+                                          // $time = $endtime-$starttime;
+                                          //$this->send_message("Time elapsed in second(s): ".$time);
+                                      }
+                                  }
+                              }
+                              break;
+                          //-----------------------------------------------------------------------------------------------------------------------
 
-                case ':$md5':
-                    if($this->is_banned() == true) { // if the user is banned
-                        break;
-                    }
-                    $hash = trim($this->ex[4]); // grabbing the hash
-                    if(!preg_match("/[a-fA-F0-9]{32}/", $hash)) {
-                        $this->send_message("The hash was invalid, it should be hex and 32 characters in length.");
-                        break;
-                    }
-                    $this->send_message("Searching the lookup table for: ".$hash); // let them know we are about to do the lookup
-                    $file = fopen("tempt.txt", "a+"); // opening temp file for found hashes
-                    $start = substr($hash, 0, 3); // grabbing first 3 characters of the hash
-                    $md5_file = "dic/".$start.".txt"; // the file is the first 3 characters of the hash .txt (i.e, ab4.txt)
-                    exec("grep -m1 '$hash' $md5_file >> tempt.txt"); // getting values from the file and storing them into tempt
-                    $count = 0; // setting our count initializer
-                    while(!feof($file)) { // while not at the end of our tempt file
-                        $line = rtrim(fgets($file)); // grab the word on the current line
-                        $word = substr($line, 33); // remove the hash and colon from the tempt file
-                        $piece = explode(":", $line);
-                        $search = $piece[0];
-                           /* if(!preg_match("/$hash/", $line)) {
-                               if(strlen($piece[1] <= 0)) {
-                                   break;
-                               }
-                                else {
-                                    $this->send_message("The value for hash: ".$hash." was not located!");
-                                }
-                            }*/
-                        //}
+                          /*
+                                                 $emd5
+                                    Convert a string (ex[4]++) into md5
+                                Echo the data of the hash back into the IRC channel
+                           */
 
-                        if(strlen($word) >= 1) { // if the word is greater than or equal to 1 in length
-                            if($this->filter_text($word) == true) {
-                                $this->send_message("The value of the hash is a glined phrase or a blacklisted word, breaking for my safety!");
+                          case ':$emd5':
+                              $plainText = $this->get_message(); // grabbing the string
+                              $plainText = rtrim($plainText); // remove trailing whitespace from our string
+                              $encString = md5($plainText); // hash our string into md5
+                              $this->send_message($plainText." hashed is: ".$encString); // echo out the md5 value
+                              break;
+
+                          //-----------------------------------------------------------------------------------------------------------------------
+
+                          /*
+                                                     $hashfile
+                                Add a list of hash values inside of md5hashes.txt to be decrypted
+                                    Check if the user is Admin or mod, if so execute the command
+                                    grab each of the hash values with ex[4]++
+                                    use fwrite to write the hash to the file
+                           */
+
+                          case ':$hashfile':
+                              if($this->is_admin() xor $this->is_mod() != true) { // if the user is not a mod or admin
+                                  $this->send_message("You do not have access to this command, sorry...");
+                              }
+                              else { // if the user is a mod or admin
+                                  $md5file = fopen("md5hashes.txt", "a+"); // opening our md5hash file
+                                  for($i=4; $i <= (count($this->ex)); $i++) { // grabbing our string
+                                      $word = rtrim($this->ex[$i]); // removing whitespace from string
+                                      if($i >= 14) {
+                                          $this->send_message("You can only insert 10 hashes at a time, only 10 hashes entered!");
+                                          break;
+                                      }
+                                      fwrite($md5file, $word."\n"); // writing the word to our file
+                                  }
+                                  $this->send_message("Done writing hashes to file...");
+                              }
+                              break;
+
+                          //-----------------------------------------------------------------------------------------------------------------------
+
+                          /*
+                                                        $md5
+                                 Check a lookup table for the given md5 hash value and echo's the value
+                                    grab the hash to lookup with ex[4]
+                                    use grep to search the file for the hash value
+                                    return the value of grep into tempt.txt
+                                    echo the values of tempt.txt into IRC if the length is >= 1
+                                    remove the tempt.txt file using a exec command
+                           */
+
+                          case ':$md5':
+                              $hash = trim($this->ex[4]); // grabbing the hash
+                              if(!preg_match("/[a-fA-F0-9]{32}/", $hash)) {
+                                  $this->send_message("The hash was invalid, it should be hex and 32 characters in length.");
+                                  break;
+                              }
+                              $this->send_message("Searching the lookup table for: ".$hash); // let them know we are about to do the lookup
+                              $file = fopen("tempt.txt", "a+"); // opening temp file for found hashes
+                              $start = substr($hash, 0, 3); // grabbing first 3 characters of the hash
+                              $md5_file = "dic/".$start.".txt"; // the file is the first 3 characters of the hash .txt (i.e, ab4.txt)
+                              exec("grep -m1 '$hash' $md5_file >> tempt.txt"); // getting values from the file and storing them into tempt
+                              $count = 0; // setting our count initializer
+                              while(!feof($file)) { // while not at the end of our tempt file
+                                  $line = rtrim(fgets($file)); // grab the word on the current line
+                                  $word = substr($line, 33); // remove the hash and colon from the tempt file
+                                  $piece = explode(":", $line);
+                                  $search = $piece[0];
+                                  /* if(!preg_match("/$hash/", $line)) {
+                                      if(strlen($piece[1] <= 0)) {
+                                          break;
+                                      }
+                                       else {
+                                           $this->send_message("The value for hash: ".$hash." was not located!");
+                                       }
+                                   }*/
+                                  //}
+
+                                  if(strlen($word) >= 1) { // if the word is greater than or equal to 1 in length
+                                      if($this->filter_text($word) == true) {
+                                          $this->send_message("The value of the hash is a glined phrase or a blacklisted word, breaking for my safety!");
+                                          break;
+                                      }
+
+                                      else {
+                                          $this->send_message("The value of the hash is: ".$word."\n"); // echo the value for the hash
+                                      }
+                                  }
+                                  $count++; // add to our count
+                              }
+                              if($count <= 1) { // if the count is less than or equal to 1
+                                  $this->send_message("Done looking up the hash... If a value for: ".$hash." was not displayed, it was not found!");
+                              }
+                              exec("rm tempt.txt"); // remove the tempt file
+                              break;
+
+                          //-----------------------------------------------------------------------------------------------------------------------
+
+                          /*
+                                                        $word
+                                    Check the dictionary for a word and add it if != exist
+                                        use grep to search for an exact match of the hash
+                                        store the output of grep into tempt.txt
+                                        use a while loop to check if tempt.txt line count is >= 2
+                                        if it is, the hash exists, so echo it's already in the file
+                                        if it is not, the hash !exist, so convert the word into $hash:$word
+                                        write the word to the file using fwrite
+                           */
+
+                          /*case ':$word':
+                             if($this->is_banned() == true) {
                                 break;
+                             }
+                            $word = $this->get_message();
+                            $this->send_message('Please wait, while I check the dictionary for: ' . $word);
+                            if(preg_match("/pony/", $word)) {
+                                $this->send_message('p0nieZ are evil, and so are you!');
                             }
+                              elseif(strlen($word) > 20) {
+                                $this->send_message('The word can not be over 20 characters in length!');
+                              }
+                                else {
+                                    $word = rtrim($word);
+                                    if(substr($word, -1) != "$") {
+                                        exec("grep -E ^.................................'$word'$ newrockyou.txt >> tempt.txt"); // if last letter != $
+                                    }
+                                    if(substr($word, -1) == "$") {
+                                        exec("grep ^.................................'$word'$ newrockyou.txt >> tempt.txt"); // last letter is $
+                                    }
+                                    $filename = fopen("/home/ninjex/bot/tempt.txt", "a+");
+                                    $count = 0;
+                                    while(!feof($filename)) {
+                                        $line = rtrim(fgets($filename));
+                                        $count++;
+                                    }
+                                    if($count <= 1) {
+                                        $hash = md5($word);
+                                        $dictionary = fopen("/home/ninjex/bot/newrockyou.txt", "a+");
+                                        fwrite($dictionary, "$hash:$word\n");
+                                        fclose($dictionary);
+                                        $this->send_message("Successfully added the word to the dictionary!");
+                                        exec("rm tempt.txt");
+                                    }
+                                    else {
+                                        $this->send_message("The word already exists!");
+                                        exec("rm tempt.txt");
+                                    }
+                                    fclose($filename);
+                                }
+                            break;*/
 
-                            else {
-                                $this->send_message("The value of the hash is: ".$word."\n"); // echo the value for the hash
-                            }
-                        }
-                        $count++; // add to our count
-                    }
-                    if($count <= 1) { // if the count is less than or equal to 1
-                        $this->send_message("Done looking up the hash... If a value for: ".$hash." was not displayed, it was not found!");
-                    }
-                    exec("rm tempt.txt"); // remove the tempt file
-                break;
+                          //-----------------------------------------------------------------------------------------------------------------------
 
-            //-----------------------------------------------------------------------------------------------------------------------
+                          /*
+                                                $math
+                                    The bot will do math calculations
+                                        grab first number ex[4]
+                                        grab operator ex[5]
+                                        grab second number ex[6]
+                                        send to math function
+                           */
 
-                  /*
-                                                $word
-                            Check the dictionary for a word and add it if != exist
-                                use grep to search for an exact match of the hash
-                                store the output of grep into tempt.txt
-                                use a while loop to check if tempt.txt line count is >= 2
-                                if it is, the hash exists, so echo it's already in the file
-                                if it is not, the hash !exist, so convert the word into $hash:$word
-                                write the word to the file using fwrite
-                   */
-
-			  /*case ':$word':
-			     if($this->is_banned() == true) {
-                    break;
-                 }
-				$word = $this->get_message();
-				$this->send_message('Please wait, while I check the dictionary for: ' . $word);
-				if(preg_match("/pony/", $word)) {
-				    $this->send_message('p0nieZ are evil, and so are you!');
-				}
-				  elseif(strlen($word) > 20) {
-				    $this->send_message('The word can not be over 20 characters in length!');
-				  }
-				    else {
-				        $word = rtrim($word);
-                        if(substr($word, -1) != "$") {
-                            exec("grep -E ^.................................'$word'$ newrockyou.txt >> tempt.txt"); // if last letter != $
-                        }
-                        if(substr($word, -1) == "$") {
-                            exec("grep ^.................................'$word'$ newrockyou.txt >> tempt.txt"); // last letter is $
-                        }
-                        $filename = fopen("/home/ninjex/bot/tempt.txt", "a+");
-                        $count = 0;
-                        while(!feof($filename)) {
-                            $line = rtrim(fgets($filename));
-                            $count++;
-                        }
-                        if($count <= 1) {
-                            $hash = md5($word);
-                            $dictionary = fopen("/home/ninjex/bot/newrockyou.txt", "a+");
-                            fwrite($dictionary, "$hash:$word\n");
-                            fclose($dictionary);
-                            $this->send_message("Successfully added the word to the dictionary!");
-                            exec("rm tempt.txt");
-                        }
-                        else {
-                            $this->send_message("The word already exists!");
-                            exec("rm tempt.txt");
-                        }
-                        fclose($filename);
-                    }
-				break;*/
-
-            //-----------------------------------------------------------------------------------------------------------------------
-
-                  /*
-                                        $math
-                            The bot will do math calculations
-                                grab first number ex[4]
-                                grab operator ex[5]
-                                grab second number ex[6]
-                                send to math function
-                   */
-
-			  case ':$math':
-                  if($this->is_banned() == true) { // if the user is banned
-                      break;
-                  }
-                  $input = rtrim($this->get_message()); // grabbing the user input
-                  //$input = preg_replace('/[0-9+*%.\/-(\*\*)]/', '', $input);
-                  $input = preg_replace('/([0-9.]+)\*\*([0-9.]+)/', 'pow($1, $2)', $input);
-                  $sum = $this->do_math($input);/*
+                          case ':$math':
+                              $input = rtrim($this->get_message()); // grabbing the user input
+                              //$input = preg_replace('/[0-9+*%.\/-(\*\*)]/', '', $input);
+                              $input = preg_replace('/([0-9.]+)\*\*([0-9.]+)/', 'pow($1, $2)', $input);
+                              $sum = $this->do_math($input);/*
                   $input = rtrim($this->get_message()); // grabbing the user input
                   $input = preg_replace('/[0-9+*%.\/-(\*\*)]/', '', $input);
                   $sum = $this->do_math($input); // store the return of our input passed through the do_math function into $sum*/
-                  if($sum == "NULL") {
-                      break;
-                  }
-                  else {
-                      $this->send_message("The value is: ".$sum); // echo the value*/
-                  }
-				  break;
+                              if($sum == "NULL") {
+                                  break;
+                              }
+                              else {
+                                  $this->send_message("The value is: ".$sum); // echo the value*/
+                              }
+                              break;
 
-            //-----------------------------------------------------------------------------------------------------------------------
+                          //-----------------------------------------------------------------------------------------------------------------------
 
-                  /*
-                                        $command
-                              Displays all of the commands the bot hash
-                   */
+                          /*
+                                                $command
+                                      Displays all of the commands the bot hash
+                           */
 
-			  case ':$commands':
-                  if($this->is_banned() == true) { // if the user is banned
-                      break;
-                  }
-                  $this->send_message('* is an indicator for mod/owner commands only'); // command reference
-                  // admin commands
-                   // $join*, $gtfo*, $leave*, $ban*, $rmban*, $mod*, $rmod*, $rmtemp*, $rmfile*, $addplayer*, $hashfile*, $emd5file*,
-                  // other commands
-                  // $say, $rand, $eunix, $emd5, $math, $md5file, $hashit, $help, $who, $joke, $lulz, $ninja, $getplayer, $register, $account, $tell, $htsuser, $forum, $b2hex, $len, $youtube
-				  $this->send_message('$join*, $gtfo*, $leave*, $ban*, $rmban*, $mod*, $rmod*, $rmtemp*, $rmfile*, $addplayer*, $hashfile*, $emd5file*, $htsuser, $forum, $b2hex, $len,'); // show commands
-				  $this->send_message('$say, $rand, $eunix, $emd5, $md5, $math, $md5file, $hashit, $help, $who, $joke, $lulz, $ninja, $getplayer, $register, $account, $tell, $youtube');
-				   break;
+                          case ':$commands':
+                              $this->send_message('* is an indicator for mod/owner commands only'); // command reference
+                              // admin commands
+                              // $join*, $gtfo*, $leave*, $ban*, $rmban*, $mod*, $rmod*, $rmtemp*, $rmfile*, $addplayer*, $hashfile*, $emd5file*,
+                              // other commands
+                              // $say, $rand, $eunix, $emd5, $math, $md5file, $hashit, $help, $who, $joke, $lulz, $ninja, $getplayer, $register, $account, $tell, $htsuser, $forum, $b2hex, $len, $youtube
+                              $this->send_message('$join*, $gtfo*, $leave*, $ban*, $rmban*, $mod*, $rmod*, $rmtemp*, $rmfile*, $addplayer*, $hashfile*, $emd5file*, $htsuser, $forum, $b2hex, $len,'); // show commands
+                              $this->send_message('$say, $rand, $eunix, $emd5, $md5, $math, $md5file, $hashit, $help, $who, $joke, $lulz, $ninja, $getplayer, $register, $account, $tell, $youtube');
+                              break;
 
-            //-----------------------------------------------------------------------------------------------------------------------
+                          //-----------------------------------------------------------------------------------------------------------------------
 
-                  /*
-                                        $help
-                            Displays additional information about a command
-                   */
+                          /*
+                                                $help
+                                    Displays additional information about a command
+                           */
 
-			  case ':$help':
-                  if($this->is_banned() == true) { // if the user is banned
-                      break;
-                  }
-                  $option = $this->ex[4]; // grab the command the user needs more details on
-                  $this->help_options($option); // pass the command into our help_options function
-		          break;
+                          case ':$help':
+                             /* if($this->is_banned() == true) { // if the user is banned
+                                  break;
+                              }*/
+                              $option = $this->ex[4]; // grab the command the user needs more details on
+                              $this->help_options($option); // pass the command into our help_options function
+                              break;
 
-              //-----------------------------------------------------------------------------------------------------
+                          //-----------------------------------------------------------------------------------------------------
 
-        }
-                        }
-            $this->main($config);
+                }
             }
-          }
-
+        }
+        $this->main($config);
+    }
+}
+    //    } // end of if($this->is_bannned() before switch statement...
 //--------------------------------------------*********************------------------------------------------------------\\
 //---------------------------------------.....______________________.....------------------------------------------------\\
 //---------------------------------------     INITIALIZING FUNCTIONS     ------------------------------------------------\\
@@ -1593,18 +1453,14 @@ class IRCBot {
         }
 
 //-------------------------------------------------------------------------------------------------------------------
+
         function con_mysql() {
-            mysql_connect('localhost', 'username', 'pass') or die(mysql_error());
+            mysql_connect('hostname', 'username', 'password') or die(mysql_error());
             mysql_select_db("database") or die(mysql_error);
 
         }
-//-------------------------------------------------------------------------------------------------------------------
 
-         /* function template() {
-         //
-        }*/
-
-//-------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
 
         function send_data($cmd, $msg = null) {
             if($this->filter_text($msg) == true) {
@@ -1793,12 +1649,18 @@ class IRCBot {
 
 //-------------------------------------------------------------------------------------------------------------------
 
-    function check_ban() {
-        if($this->is_banned() == true) { // if the user being banned = true
-            $this->who_is(); // grab the details of the user
-            $this->send_message("Sorry, I don't listen to idiots."); // give error
-            $this->send_data('PRIVMSG Ninjex :A banned user [' . $GLOBALS['user'] . '] aka [' . $GLOBALS['fullUser'] . '] attempted to use the bot'); // let the admin know a baned user attempted to use the bot
+    function check_ban($host) {
+        $banfile = fopen("baned_users.txt", "a+");
+        $hostinfile = NULL;
+        while(!feof($banfile) && $hostinfile != $host) {
+            $hostinfile = rtrim(fgets($banfile));
+        }
+        if($hostinfile == $host) {
             return true;
+            $this->send_data('PRIVMSG Ninjex :A banned user [' . $GLOBALS['user'] . '] aka [' . $GLOBALS['fullUser'] . '] attempted to use the bot'); // let the admin know a baned user attempted to use the bot
+        }
+        else {
+            return false;
         }
     }
 
